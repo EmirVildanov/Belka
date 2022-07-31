@@ -1,31 +1,36 @@
 package db
 
-import AccountInfo
-import com.mongodb.client.MongoClient
-import com.mongodb.client.MongoCollection
-import com.mongodb.client.MongoDatabase
-import org.litote.kmongo.*
+import model.AccountInfo
+import model.UserState
+import org.litote.kmongo.coroutine.*
+import org.litote.kmongo.reactivestreams.*
 
-class DbEngine {
-    private lateinit var client: MongoClient
-    private lateinit var db: MongoDatabase
-    private lateinit var accountsCollection: MongoCollection<AccountInfo>
+object DbEngine {
+    const val BLA_BLA_ELKA_DB_NAME = "blablaelka"
+    const val ACCOUNTS_COLLECTION_NAME = "accounts"
 
-    init {
-        client = KMongo.createClient()
-        db = client.getDatabase(ACCOUNTS_COLLECTION_NAME)
-        accountsCollection = db.getCollection<AccountInfo>()
+    private lateinit var client: CoroutineClient
+    private lateinit var db: CoroutineDatabase
+    private lateinit var accountsInfoCollection: CoroutineCollection<AccountInfo>
+
+    /*
+    Called from Server object from @start function to initialize db
+     */
+    fun init() {
+        client = KMongo.createClient().coroutine
+        db = client.getDatabase(BLA_BLA_ELKA_DB_NAME)
+        accountsInfoCollection = db.getCollection<AccountInfo>()
     }
 
-    fun testInsert(accountInfo: AccountInfo) {
-        accountsCollection.insertOne(accountInfo)
+    suspend fun getAccountInfo(userId: Long): AccountInfo {
+        return accountsInfoCollection.findOne(AccountInfo::id eq userId)
     }
 
-    fun testGet(accountId: Int): AccountInfo? {
-        return accountsCollection.findOne(AccountInfo::id eq accountId)
+    suspend fun changeUserState(userId: Long, userState: UserState) {
+        TODO("Push to GitHub. Change OS.")
     }
 
-    companion object {
-        const val ACCOUNTS_COLLECTION_NAME = "accounts"
+    suspend fun testInsert(accountInfo: AccountInfo) {
+        accountsInfoCollection.insertOne(accountInfo)
     }
 }

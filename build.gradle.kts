@@ -26,9 +26,9 @@ dependencies {
     implementation("io.github.kotlin-telegram-bot.kotlin-telegram-bot:telegram:$versionTelegramBot")
 
     // mongodb
-    implementation("org.litote.kmongo:kmongo-serialization:$versionMongodb")
-    // mongodb through coroutine
-//    implementation("org.litote.kmongo:kmongo-coroutine-serialization:$versionMongodb)
+//    implementation("org.litote.kmongo:kmongo-serialization:$versionMongodb")
+    // async driver
+    implementation("org.litote.kmongo:kmongo-coroutine-serialization:$versionMongodb")
 
 
     // dependency just to read from resources folder

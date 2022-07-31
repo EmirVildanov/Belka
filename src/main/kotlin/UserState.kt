@@ -1,8 +1,0 @@
-enum class UserState {
-    NOT_STARTED,
-    MAIN_MENU,
-    FILLING_ACCOUNT_INFO,
-    FILLING_NAME,
-    FILLING_SURNAME,
-    CHOOSING_DIRECTION
-}
