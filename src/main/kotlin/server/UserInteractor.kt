@@ -42,7 +42,7 @@ object CommandHandler {
 
     }
 
-    fun handleCommandStart(environment: CommandHandlerEnvironment) {
+    fun handleCommandStart(env: CommandHandlerEnvironment) {
         TODO("Not yet implemented")
     }
 }

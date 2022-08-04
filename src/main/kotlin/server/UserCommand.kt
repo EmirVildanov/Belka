@@ -2,7 +2,6 @@ package server
 
 import model.UserState
 
-@kotlinx.serialization.Serializable
 data class StateMovement(val from: UserState, val to: UserState)
 
 enum class UserCommand(val commandName: String) {

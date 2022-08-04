@@ -8,6 +8,9 @@ data class AccountInfo(
     val name: String,
     val surname: String,
     val age: Int,
-    val state: UserState
-) {
-}
+    val state: UserState,
+    val rating: UserReview
+)
+
+@Serializable
+data class UserRating(val rate: Int, val feedbacks: List<String>)

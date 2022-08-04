@@ -4,37 +4,24 @@ import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.command
-import com.github.kotlintelegrambot.dispatcher.handlers.CommandHandlerEnvironment
 import com.github.kotlintelegrambot.dispatcher.text
 import com.github.kotlintelegrambot.entities.ChatId
-import com.github.kotlintelegrambot.entities.KeyboardReplyMarkup
 import com.github.kotlintelegrambot.logging.LogLevel
 import db.DbEngine
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import model.AccountInfo
-import model.UserState
 import utils.CustomLogger
-import utils.getResourcesFile
-import java.util.*
+import utils.Utils
 
 object Server {
     private const val TELEGRAM_CONFIG_TOKEN_KEY_NAME = "apiToken"
-    private const val TELEGRAM_CONFIG_PROPERTIES_NAME = "telegramconfig.properties"
+    private const val TELEGRAM_CONFIG_FILE_NAME = "telegramconfig.properties"
 
     private val logger = CustomLogger
     private lateinit var telegramBot: Bot
 
-    private fun readProperties(): String {
-        val prop = Properties()
-        prop.load(getResourcesFile(TELEGRAM_CONFIG_PROPERTIES_NAME))
-        return prop.getProperty(TELEGRAM_CONFIG_TOKEN_KEY_NAME)
-    }
-
     fun start() {
         try {
             DbEngine.init()
-            val accessToken = readProperties()
+            val accessToken = Utils.getProperty(TELEGRAM_CONFIG_FILE_NAME, TELEGRAM_CONFIG_TOKEN_KEY_NAME)
             telegramBot = bot {
                 token = accessToken
                 logLevel = LogLevel.Error

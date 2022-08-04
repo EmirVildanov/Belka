@@ -1,0 +1,4 @@
+package server
+
+object KeyboardCreator {
+}
