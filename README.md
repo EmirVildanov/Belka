@@ -33,3 +33,4 @@ the interlocutor he was matched with indicating a reason description.
 ### Dev links:
 I would like to see you as a contributor to this project :)
 * [Link to chatbot states](https://lucid.app/lucidchart/be301ab7-e7b3-4da6-8945-35b652179a83/edit?invitationId=inv_b88953e5-c8e9-458f-963f-41b3ad14658e&page=0_0#)
+* [Link to database diagram](https://dbdiagram.io/d/62ed062bc2d9cf52fa52969a)

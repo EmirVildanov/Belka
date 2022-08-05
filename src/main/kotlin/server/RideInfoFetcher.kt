@@ -11,6 +11,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import model.RideInfo
 import model.RideOpportunitiesInfo
+import model.enum.TransportType
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
 import utils.Utils
@@ -29,7 +30,6 @@ object RideInfoFetcher {
     private const val YANDEX_API_BASE_URL = "https://api.rasp.yandex.net/v3.0/search/"
     private const val YANDEX_API_BALTIYSKY_RAILWAY_STATION_CODE = "s9602498"
     private const val YANDEX_API_UNIVERSITY_STATION_CODE = "s9603770"
-    private const val YANDEX_API_TRANSPORT_TYPES = "suburban"
     private const val YANDEX_API_TRANSFER = "false"
 
     private var yandexServiceApiKey: String = Utils.getProperty(YANDEX_API_CONFIG_FILE_NAME, YANDEX_API_CONFIG_API_KEY_NAME)
@@ -62,7 +62,7 @@ object RideInfoFetcher {
                 parameters.append(YANDEX_API_FROM_KEY_NAME, from)
                 parameters.append(YANDEX_API_TO_KEY_NAME, to)
                 parameters.append(YANDEX_API_DATE_KEY_NAME, date.toString())
-                parameters.append(YANDEX_API_TRANSPORT_TYPES_KEY_NAME, YANDEX_API_TRANSPORT_TYPES)
+                parameters.append(YANDEX_API_TRANSPORT_TYPES_KEY_NAME, TransportType.SUBURBAN.transportName)
                 parameters.append(YANDEX_API_TRANSFERS_TYPES_KEY_NAME, YANDEX_API_TRANSFER)
             }
         }

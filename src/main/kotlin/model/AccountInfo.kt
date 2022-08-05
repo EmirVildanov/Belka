@@ -1,16 +1,18 @@
 package model
 
 import kotlinx.serialization.Serializable
+import org.joda.time.DateTime
+import server.DateTimeSerializer
 
 @Serializable
 data class AccountInfo(
-    val id: Long,
+    val id: Int,
+    @Serializable(with = DateTimeSerializer::class)
+    val createdAt: DateTime,
     val name: String,
-    val surname: String,
-    val age: Int,
+    val surname: String?,
+    val age: Int?,
     val state: UserState,
-    val rating: UserReview
+    val rating: List<UserReview>,
+    val statistics: UserStatistics
 )
-
-@Serializable
-data class UserRating(val rate: Int, val feedbacks: List<String>)

@@ -1,6 +1,6 @@
-package server
+package server.enum
 
-import model.UserState
+import model.enum.UserState
 
 data class StateMovement(val from: UserState, val to: UserState)
 

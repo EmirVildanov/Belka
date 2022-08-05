@@ -1,7 +1,6 @@
 package db
 
 import model.AccountInfo
-import model.UserState
 import org.litote.kmongo.coroutine.*
 import org.litote.kmongo.eq
 import org.litote.kmongo.reactivestreams.*
