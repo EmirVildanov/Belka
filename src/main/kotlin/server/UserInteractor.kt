@@ -5,11 +5,12 @@ import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.KeyboardReplyMarkup
 import db.DbEngine
 import kotlinx.coroutines.*
+import server.enum.UserCommand
 
 object CommandHandler {
 
-    val job: Job = SupervisorJob()
-    val scope = CoroutineScope(Dispatchers.Default + job)
+    private val job: Job = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.Default + job)
 
     private suspend fun checkState(env: CommandHandlerEnvironment, command: UserCommand): Boolean {
         val userChatId = env.message.chat.id

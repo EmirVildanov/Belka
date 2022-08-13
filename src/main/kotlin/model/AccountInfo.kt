@@ -1,6 +1,7 @@
 package model
 
 import kotlinx.serialization.Serializable
+import model.enum.UserState
 import org.joda.time.DateTime
 import server.DateTimeSerializer
 
@@ -12,6 +13,7 @@ data class AccountInfo(
     val name: String,
     val surname: String?,
     val age: Int?,
+    val about: String,
     val state: UserState,
     val rating: List<UserReview>,
     val statistics: UserStatistics

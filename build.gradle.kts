@@ -17,6 +17,7 @@ val versionSerialization = "1.3.2"
 val versionMongodb = "4.6.1"
 val versionKtor = "2.0.3"
 val versionJodaTime = "2.10.14"
+val versionLettuce = "6.2.0.RELEASE"
 
 repositories {
     mavenCentral()
@@ -33,8 +34,11 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$versionKtor")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$versionKtor")
 
-    // async driver
+    // kmongo async driver for MondoDB
     implementation("org.litote.kmongo:kmongo-coroutine-serialization:$versionMongodb")
+
+    // Redis driver
+    implementation("io.lettuce:lettuce-core:$versionLettuce")
 
     // dependency just to read from resources folder
     implementation("com.google.guava:guava:$versionGuava")
