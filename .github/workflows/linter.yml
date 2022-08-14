@@ -5,7 +5,7 @@ name: Lint Code Base
 # https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
 #
 
-on: push
+on: [push, pull_request]
 
 jobs:
   build:
