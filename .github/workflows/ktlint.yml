@@ -1,12 +1,10 @@
 name: ktlint
-
 on:
   pull_request:
     paths:
       - .github/workflows/ktlint.yml
       - 'src/**/*.kt'
       - '**.kts'
-
 jobs:
   ktlint:
     runs-on: ubuntu-latest
