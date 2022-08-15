@@ -1,5 +1,3 @@
 package server
 
-object KeyboardCreator {
-
-}
+object KeyboardCreator

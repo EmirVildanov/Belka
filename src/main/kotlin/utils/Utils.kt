@@ -20,10 +20,8 @@ object Utils {
     }
 
     fun checkRateInBounds(rate: Int) {
-
     }
 
     fun checkTextInBounds(rate: Int) {
-
     }
 }
