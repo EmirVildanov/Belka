@@ -2,7 +2,7 @@
 
 ## Application for finding elka<sup>[1]</sup> (and not only) interlocutors
 
-<img src="readme_data/Elka.jpg" width="1280" height="961" alt="Elka">
+<img src="readme_data/Elka.jpg" width="1280" height="461" alt="Elka">
 
 ### About
 
