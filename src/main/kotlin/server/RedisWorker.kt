@@ -7,7 +7,7 @@ import kotlinx.coroutines.runBlocking
 object RedisWorker {
     fun start() {
         runBlocking {
-            val job  = launch(Dispatchers.Default) {
+            val job = launch(Dispatchers.Default) {
                 newClient(Endpoint.from("127.0.0.1:6379")).use { client ->
                     client.set("foo", "100")
                     // prints 101

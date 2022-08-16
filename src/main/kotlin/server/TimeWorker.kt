@@ -13,7 +13,7 @@ import org.joda.time.format.ISODateTimeFormat
 
 object TimeWorker {
     private val zoneMoscow = DateTimeZone.forID("Europe/Moscow")
-    private val rideTimeFormatter = ISODateTimeFormat.hourMinute();
+    private val rideTimeFormatter = ISODateTimeFormat.hourMinute()
 
     fun getCurrentTime(): LocalDate {
         return LocalDate.now(zoneMoscow)

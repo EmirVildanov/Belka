@@ -35,12 +35,9 @@ object CommandHandler {
             replyMarkup = keyboardReplyMarkup
         )
         result.fold({
-
         }, {
             env.bot.sendMessage(ChatId.fromId(env.message.chat.id), text = "Something went wrong :( $it")
         })
-
-
     }
 
     fun handleCommandStart(env: CommandHandlerEnvironment) {
