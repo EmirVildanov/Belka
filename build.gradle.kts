@@ -53,9 +53,13 @@ dependencies {
     implementation("joda-time:joda-time:$versionJodaTime")
     // serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$versionSerialization")
+
+    // testing
+    testImplementation(kotlin("test"))
 }
 
 detekt {
+    autoCorrect = true
     buildUponDefaultConfig = true // preconfigure defaults
     allRules = false // activate all available (even unstable) rules.
 }
@@ -71,6 +75,12 @@ tasks.withType<io.gitlab.arturbosch.detekt.DetektCreateBaselineTask>().configure
     jvmTarget = "1.8"
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
 application {
     mainClass.set("MainKt")
 }
+
+

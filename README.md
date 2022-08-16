@@ -63,16 +63,17 @@ BlaBlaCar, for example).
 
 ### Architecture
 
-* **KotlinTelegramBot** for bot frontend
+* **KotlinTelegramBot** for telegram bot frontend
 * **MongoDb** for storing data
-* **Ktor** for http requests
 * ??? **Redis** for storing applications info ???
+* **Ktor** for http requests
 * **Yandex Rasp API** for fetching rides info. On first request <FROM-TO> in a day it stores information in db (cache?).
 
 ### Development
 
-* Fuck ktlint. I had problems with it's configuration. Using detekt, guys:
-  * 
+* Fuck ktlint. I had problems with its configuration. Using detekt, guys:
+  * Run `./gradlew detekt` before pushing
+* In order to run tests use `./gradlew check`
 
 ### Dev links:
 

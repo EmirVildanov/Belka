@@ -1,8 +1,8 @@
 package db
 
 import model.AccountInfo
+import model.enum.UserState
 import org.litote.kmongo.coroutine.*
-import org.litote.kmongo.eq
 import org.litote.kmongo.reactivestreams.*
 
 object DbEngine {
@@ -23,8 +23,9 @@ object DbEngine {
     }
 
     suspend fun getAccountInfo(userId: Long): AccountInfo {
-        return accountsInfoCollection.findOne(AccountInfo::id eq userId)
-            ?: throw BadDbRequestException("No account with id $userId")
+//        return accountsInfoCollection.findOne(AccountInfo::id eq userId)
+//            ?: throw BadDbRequestException("No account with id $userId")
+        throw BadDbRequestException("No account with id $userId")
     }
 
     suspend fun changeUserState(userId: Long, userState: UserState) {
