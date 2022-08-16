@@ -1,0 +1,1 @@
+TODO: model that checks presence of human face on loaded account info photo

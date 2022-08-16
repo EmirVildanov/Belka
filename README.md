@@ -55,6 +55,7 @@ BlaBlaCar, for example).
 - [ ] Update .sh so it creates accounts database on machine
 - [ ] data/db dir must be created in the root folder: `sudo chmod -R go+w /data/db`
 - [ ] [look at course on kubernetes](https://www.edx.org/course/introduction-to-kubernetes)
+- [ ] Need to start redis with `redis-server`
 - [ ] configure kubernetes
 - [ ] 
   From [Docker security tips](https://blog.aquasec.com/docker-security-best-practices): [run the docker container as a non-root user](https://docs.docker.com/engine/security/rootless/)
@@ -70,7 +71,8 @@ BlaBlaCar, for example).
 
 ### Development
 
-* Call `./gradlew ktlintCheck` (`./gradlew ktlintFormat` in help) before pushing code to repository
+* Fuck ktlint. I had problems with it's configuration. Using detekt, guys:
+  * 
 
 ### Dev links:
 
