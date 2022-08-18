@@ -1,4 +1,4 @@
-package server
+package redisdb
 
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
@@ -14,18 +14,19 @@ object RedisConnector {
     private const val REDIS_CONFIG_HOST_KEY_NAME = "host"
     private const val REDIS_CONFIG_PORT_KEY_NAME = "port"
 
-    private lateinit var client: RedisClient
+    private var client: RedisClient? = null
     private lateinit var connection: StatefulRedisConnection<String, String>
     private lateinit var asyncCommands: RedisAsyncCommands<String, String>
 
-    fun start() {
+    fun init() {
         val host = Utils.getProperty(REDIS_CONFIG_FILE_NAME, REDIS_CONFIG_HOST_KEY_NAME)
         val port = Utils.getProperty(REDIS_CONFIG_FILE_NAME, REDIS_CONFIG_PORT_KEY_NAME)
 
-
         client = RedisClient.create("redis://@$host:$port/")
-        connection = client.connect()
-        asyncCommands = connection.async()
+        if (client != null) {
+            connection = client!!.connect()
+            asyncCommands = connection.async()
+        }
     }
 
     fun setApplicationInfo(key: String, application: Application) {
@@ -34,5 +35,11 @@ object RedisConnector {
 
     fun getApplicationInfo(key: String): Application {
         return Json.decodeFromString<Application>(asyncCommands.get(key).get())
+    }
+
+    fun stop() {
+        if (client != null) {
+            client!!.close()
+        }
     }
 }

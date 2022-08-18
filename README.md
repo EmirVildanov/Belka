@@ -53,7 +53,7 @@ BlaBlaCar, for example).
 ### TODO:
 
 - [ ] Update .sh so it creates accounts database on machine
-- [ ] data/db dir must be created in the root folder: `sudo chmod -R go+w /data/db`
+- [ ] data/mongodb dir must be created in the root folder: `sudo chmod -R go+w /data/mongodb`
 - [ ] [look at course on kubernetes](https://www.edx.org/course/introduction-to-kubernetes)
 - [ ] Need to start redis with `redis-server`
 - [ ] configure kubernetes
@@ -67,13 +67,15 @@ BlaBlaCar, for example).
 * **MongoDb** for storing data
 * ??? **Redis** for storing applications info ???
 * **Ktor** for http requests
-* **Yandex Rasp API** for fetching rides info. On first request <FROM-TO> in a day it stores information in db (cache?).
+* **Yandex Rasp API** for fetching rides info. On first request <FROM-TO> in a day it stores information in mongodb (cache?).
 
 ### Development
 
 * Fuck ktlint. I had problems with its configuration. Using detekt, guys:
   * Run `./gradlew detekt` before pushing
+  * File > Settings > Project Settings > Code Style > Java > Imports > General > Class count to use import with '*' set to 30 (to be free of wildcard imports)
 * In order to run tests use `./gradlew check`
+* Using InteliJIDEA you may connect to local MongoDb in order to work with data more comfortably.
 
 ### Dev links:
 

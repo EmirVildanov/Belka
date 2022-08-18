@@ -1,14 +1,8 @@
 package server
 
-import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.json.Json
 import model.RideInfo
 import model.RideOpportunitiesInfo
 import model.enum.TransportType
@@ -32,41 +26,43 @@ object RideInfoFetcher {
     private const val YANDEX_API_UNIVERSITY_STATION_CODE = "s9603770"
     private const val YANDEX_API_TRANSFER = "false"
 
-    private var yandexServiceApiKey: String = Utils.getProperty(YANDEX_API_CONFIG_FILE_NAME, YANDEX_API_CONFIG_API_KEY_NAME)
-    private var client: HttpClient = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(
-                Json {
-                    ignoreUnknownKeys = true
-                }
-            )
-        }
+    private lateinit var yandexServiceApiKey: String
+
+    fun init() {
+        yandexServiceApiKey = Utils.getProperty(YANDEX_API_CONFIG_FILE_NAME, YANDEX_API_CONFIG_API_KEY_NAME)
     }
 
     suspend fun getDormitoryToTownRides(date: LocalDate): List<RideInfo> {
         val response: RideOpportunitiesInfo =
-            getFromToInfo(YANDEX_API_UNIVERSITY_STATION_CODE, YANDEX_API_BALTIYSKY_RAILWAY_STATION_CODE, date).body()
+            getStationsFromToInfo(
+                YANDEX_API_UNIVERSITY_STATION_CODE,
+                YANDEX_API_BALTIYSKY_RAILWAY_STATION_CODE,
+                date
+            ).body()
         return response.segments.filter { DateTime(it.departure).toDateTime() > DateTime.now().toDateTime() }
     }
 
     suspend fun getTownToDormitoryRides(date: LocalDate): List<RideInfo> {
         val response: RideOpportunitiesInfo =
-            getFromToInfo(YANDEX_API_BALTIYSKY_RAILWAY_STATION_CODE, YANDEX_API_UNIVERSITY_STATION_CODE, date).body()
+            getStationsFromToInfo(
+                YANDEX_API_BALTIYSKY_RAILWAY_STATION_CODE,
+                YANDEX_API_UNIVERSITY_STATION_CODE,
+                date
+            ).body()
         return response.segments.filter { DateTime(it.departure).toDateTime() > DateTime.now().toDateTime() }
     }
 
-    private suspend fun getFromToInfo(from: String, to: String, date: LocalDate): HttpResponse {
-        return client.get(YANDEX_API_BASE_URL) {
-            headers {
-                append(HttpHeaders.Authorization, yandexServiceApiKey)
-            }
-            url {
-                parameters.append(YANDEX_API_FROM_KEY_NAME, from)
-                parameters.append(YANDEX_API_TO_KEY_NAME, to)
-                parameters.append(YANDEX_API_DATE_KEY_NAME, date.toString())
-                parameters.append(YANDEX_API_TRANSPORT_TYPES_KEY_NAME, TransportType.SUBURBAN.transportName)
-                parameters.append(YANDEX_API_TRANSFERS_TYPES_KEY_NAME, YANDEX_API_TRANSFER)
-            }
-        }
+    suspend fun getStationsFromToInfo(from: String, to: String, date: LocalDate): HttpResponse {
+        return NetworkInteractor.get(
+            YANDEX_API_BASE_URL,
+            listOf(HttpHeaders.Authorization to yandexServiceApiKey),
+            listOf(
+                YANDEX_API_FROM_KEY_NAME to from,
+                YANDEX_API_TO_KEY_NAME to to,
+                YANDEX_API_DATE_KEY_NAME to date.toString(),
+                YANDEX_API_TRANSPORT_TYPES_KEY_NAME to TransportType.SUBURBAN.transportName,
+                YANDEX_API_TRANSFERS_TYPES_KEY_NAME to YANDEX_API_TRANSFER
+            )
+        )
     }
 }

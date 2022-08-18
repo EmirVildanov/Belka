@@ -1,24 +1,21 @@
-package db
+package mongodb
 
 import model.AccountInfo
 import model.enum.UserState
 import org.litote.kmongo.coroutine.*
 import org.litote.kmongo.reactivestreams.*
 
-object DbEngine {
+object MongoDbConnector {
     const val BLA_BLA_ELKA_DB_NAME = "blablaelka"
     const val ACCOUNTS_COLLECTION_NAME = "accounts"
 
-    private lateinit var client: CoroutineClient
+    private var client: CoroutineClient? = null
     private lateinit var db: CoroutineDatabase
     private lateinit var accountsInfoCollection: CoroutineCollection<AccountInfo>
 
-    /*
-    Called from Server object from @start function to initialize db
-     */
     fun init() {
         client = KMongo.createClient().coroutine
-        db = client.getDatabase(BLA_BLA_ELKA_DB_NAME)
+        db = client!!.getDatabase(BLA_BLA_ELKA_DB_NAME)
         accountsInfoCollection = db.getCollection()
     }
 
@@ -34,6 +31,12 @@ object DbEngine {
 
     suspend fun testInsert(accountInfo: AccountInfo) {
         accountsInfoCollection.insertOne(accountInfo)
+    }
+
+    fun stop() {
+        if (client != null) {
+            client!!.close()
+        }
     }
 }
 
