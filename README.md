@@ -52,6 +52,7 @@ BlaBlaCar, for example).
 
 ### TODO:
 
+- [ ] Change app name so we won't have problems from BlaBlaCar's side
 - [ ] Update .sh so it creates accounts database on machine
 - [ ] data/mongodb dir must be created in the root folder: `sudo chmod -R go+w /data/mongodb`
 - [ ] [look at course on kubernetes](https://www.edx.org/course/introduction-to-kubernetes)
@@ -59,7 +60,9 @@ BlaBlaCar, for example).
 - [ ] configure kubernetes
 - [ ] 
   From [Docker security tips](https://blog.aquasec.com/docker-security-best-practices): [run the docker container as a non-root user](https://docs.docker.com/engine/security/rootless/)
-- [ ] [pass configs to image through secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+- [ ] [Pass configs to image through secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
+- [ ] Add streamlit website so users can make applications more comfortably
+- [ ] Add `credentials` field to AccountInfo so users may authorize securely if it's needed
 
 ### Architecture
 

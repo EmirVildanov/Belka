@@ -5,6 +5,9 @@ import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.logging.LogLevel
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.runBlocking
+import model.AccountInfo
 import mongodb.MongoDbConnector
 import redisdb.RedisConnector
 import serverCommunication.ServerCommunicator
@@ -23,27 +26,7 @@ object Server {
     fun start() {
         try {
             init()
-            telegramBot = bot {
-                token = accessToken
-                logLevel = LogLevel.Error
-
-                dispatch {
-                    message {
-                        if (message.photo != null) {
-                            UserInteractor.handlePhoto(this)
-                        }
-                        if (message.document != null) {
-                            UserInteractor.handleDocument(this)
-                        }
-                        if (textIsCommand(message.text)) {
-                            UserInteractor.handleCommand(this)
-                        }
-                        UserInteractor.handleText(this)
-                    }
-                }
-            }
-            telegramBot.startPolling()
-            CustomLogger.logInfoMessage("Bot started polling")
+            startBotPolling()
         } catch (e: IllegalArgumentException) {
             CustomLogger.logExceptionMessage("Probably couldn't open properties file", e)
         } catch (e: Exception) {
@@ -54,9 +37,33 @@ object Server {
     private fun init() {
         accessToken = Utils.getProperty(TELEGRAM_CONFIG_FILE_NAME, TELEGRAM_CONFIG_TOKEN_KEY_NAME)
 //        startMongoDbServer()
-//        MongoDbConnector.init()
+        MongoDbConnector.init()
 //        RedisConnector.init()
         NetworkInteractor.init()
+    }
+
+    private fun startBotPolling() {
+        telegramBot = bot {
+            token = accessToken
+            logLevel = LogLevel.Error
+
+            dispatch {
+                message {
+                    if (message.photo != null) {
+                        UserInteractor.handlePhoto(this)
+                    }
+                    if (message.document != null) {
+                        UserInteractor.handleDocument(this)
+                    }
+                    if (textIsCommand(message.text)) {
+                        UserInteractor.handleCommand(this)
+                    }
+                    UserInteractor.handleText(this)
+                }
+            }
+        }
+        telegramBot.startPolling()
+        CustomLogger.logInfoMessage("Bot started polling")
     }
 
     private fun startMongoDbServer() {

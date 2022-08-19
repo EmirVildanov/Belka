@@ -6,18 +6,18 @@ import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.TelegramFile
 import mongodb.MongoDbConnector
 import kotlinx.coroutines.*
+import model.enum.StateChange
 import model.enum.UserState
 import server.enum.UserCommand
 import utils.CustomLogger
-import utils.Utils
 
 object UserInteractor {
 
     private val job: Job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Default + job)
 
-    private suspend fun getUserChange(command: UserCommand, userState: UserState): UserState? {
-        return command.allowedStateChanges.find { it.first == userState }?.second
+    private fun getUserStateChange(currentState: UserState, command: UserCommand): StateChange? {
+        return currentState.allowedStateChanges.find { it.command == command }
     }
 
     fun handleCommandAccount(env: CommandHandlerEnvironment) = scope.launch {
@@ -40,14 +40,22 @@ object UserInteractor {
             val command = UserCommand.valueOf(commandName)
             val accountInfo = MongoDbConnector.getAccountInfo(getChatId(env).id)
             val currentState = accountInfo.state
-            val newState = getUserChange(command, currentState)
-            if (newState == null) {
+            val newStateChange = getUserStateChange(currentState, command)
+            if (newStateChange == null) {
                 sendMessage(env, "This command is not allowed in your state.")
             }
-            val commandPreExecuteCheckResult = command.preExecuteCheck(env)
-            if (!commandPreExecuteCheckResult.first) {
-                val checkMessage = commandPreExecuteCheckResult.second
-                checkMessage?.also { sendMessage(env, it) } ?: throw Exception("Checked failed, but message is null")
+            newStateChange?.let {
+                if (newStateChange.preExecuteCheck != null) {
+                    val commandPreExecuteCheckResult = newStateChange.preExecuteCheck!!(env)
+                    if (!commandPreExecuteCheckResult.status) {
+                        val checkMessage = commandPreExecuteCheckResult.errorMessage
+                        checkMessage?.also { sendMessage(env, it) }
+                            ?: throw Exception("Command pre execute check failed, but message is null.")
+                    }
+                    if (newStateChange.onExecuteChange != null) {
+                        newStateChange.onExecuteChange!!(env)
+                    }
+                }
             }
         } catch (e: IllegalArgumentException) {
             CustomLogger.logInfoMessage("User ${getUsername(env)} sent wrong command")
@@ -70,6 +78,8 @@ object UserInteractor {
                 getChatId(env),
                 text = "I don't accept random text in current state."
             )
+        } else {
+
         }
     }
 
@@ -91,7 +101,7 @@ object UserInteractor {
         return env.message.chat.username
     }
 
-    private fun getChatId(env: MessageHandlerEnvironment): ChatId.Id {
+    fun getChatId(env: MessageHandlerEnvironment): ChatId.Id {
         return ChatId.fromId(env.message.chat.id)
     }
 
