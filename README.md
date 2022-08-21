@@ -54,12 +54,13 @@ BlaBlaCar, for example).
 
 - [ ] Change app name so we won't have problems from BlaBlaCar's side
 - [ ] Update .sh so it creates accounts database on machine
-- [ ] data/mongodb dir must be created in the root folder: `sudo chmod -R go+w /data/mongodb`
+- [ ] data/db dir must be created in the root folder: `sudo chmod -R go+w /data/db`
 - [ ] [look at course on kubernetes](https://www.edx.org/course/introduction-to-kubernetes)
 - [ ] Need to start redis with `redis-server`
 - [ ] configure kubernetes
 - [ ] 
   From [Docker security tips](https://blog.aquasec.com/docker-security-best-practices): [run the docker container as a non-root user](https://docs.docker.com/engine/security/rootless/)
+- [ ] Add proxy for RideInfoFetcher
 - [ ] [Pass configs to image through secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
 - [ ] Add streamlit website so users can make applications more comfortably
 - [ ] Add `credentials` field to AccountInfo so users may authorize securely if it's needed
@@ -67,18 +68,22 @@ BlaBlaCar, for example).
 ### Architecture
 
 * **KotlinTelegramBot** for telegram bot frontend
+* **[VkJavaSDK](https://github.com/VKCOM/vk-java-sdk)** for Vk bot frontend **TBD**
 * **MongoDb** for storing data
-* ??? **Redis** for storing applications info ???
+* **Redis** for caching:
+  * Network calls (such as requests to Yandex Rasp API)
+  * MongoDb calls
 * **Ktor** for http requests
-* **Yandex Rasp API** for fetching rides info. On first request <FROM-TO> in a day it stores information in mongodb (cache?).
+* **Yandex Rasp API** for fetching rides info. On first request <FROM-TO> in a day it stores information in db (cache?).
 
 ### Development
 
-* Fuck ktlint. I had problems with its configuration. Using detekt, guys:
+* I **decided** not to use ktlint as I had problems with its configuration. Using detekt, guys:
   * Run `./gradlew detekt` before pushing
-  * File > Settings > Project Settings > Code Style > Java > Imports > General > Class count to use import with '*' set to 30 (to be free of wildcard imports)
+  * File > Settings > Project Settings > Code Style > Kotlin > Imports > General > Use single name import
+  * Remove everything from "Package to use Imports with *"
 * In order to run tests use `./gradlew check`
-* Using InteliJIDEA you may connect to local MongoDb in order to work with data more comfortably.
+* Using IntelliJIDEA you may connect to local MongoDb in order to work with data more comfortably.
 
 ### Dev links:
 

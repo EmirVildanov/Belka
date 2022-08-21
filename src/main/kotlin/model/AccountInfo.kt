@@ -1,39 +1,37 @@
 package model
 
 import kotlinx.serialization.Serializable
-import model.enum.UserState
+import server.userInteractor.UserState
 import org.joda.time.DateTime
 import server.DateTimeSerializer
+import server.userInteractor.UserState.NOT_STARTED
 
+// As soon as user must fill such fields as name and surname, by default these fields are null
 @Serializable
 data class AccountInfo(
-    // ChatId
-    val id: Long,
+    val id: Long,                  // ChatId
     @Serializable(with = DateTimeSerializer::class)
     val createdAt: DateTime,
-    val name: String,
-    val username: String,
-    val about: String,
-    val state: UserState,
-    val rating: List<UserReview>,
-    val statistics: UserStatistics,
-    val newField: Int,
-    // FileId
-    val photo: String? = null,
+    val state: UserState = NOT_STARTED,
+    val rating: List<UserReview> = listOf(),
+    val statistics: Statistics?,
+    val name: String? = null,
+    val username: String? = null,
+    val about: String? = null,
+    val photo: String? = null,     // FileId
     val age: Int? = null,
     val surname: String? = null
 ) {
     companion object {
         val MOCK_ACCOUNT_INFO = AccountInfo(
-            1,
-            DateTime.now(),
-            "Rambo",
-            "Terminator",
-            "Shwartz",
-            UserState.NOT_STARTED,
-            listOf(),
-            UserStatistics(1, 0),
-            1
+            id = 1,
+            createdAt = DateTime.now(),
+            name = "Rambo",
+            surname = "Terminator",
+            username = "Shwartz",
+            state = NOT_STARTED,
+            rating = listOf(),
+            statistics = Statistics(1, 1,0)
         )
     }
 }

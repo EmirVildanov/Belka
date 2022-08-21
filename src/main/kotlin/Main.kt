@@ -1,7 +1,10 @@
+import db.RedisConnector
 import server.Server
-import server.enum.UserCommand
 
 fun main() {
     val server = Server
-    server.start()
+//    server.start()
+    RedisConnector.init()
+    val info = RedisConnector.getApplicationInfo("1")
+    println(info)
 }
