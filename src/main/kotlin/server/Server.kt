@@ -5,11 +5,9 @@ import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.logging.LogLevel
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.runBlocking
-import model.AccountInfo
-import mongodb.MongoDbConnector
-import redisdb.RedisConnector
+import db.MongoDbConnector
+import db.RedisConnector
+import server.userInteractor.UserInteractor
 import serverCommunication.ServerCommunicator
 import utils.CustomLogger
 import utils.Utils
@@ -51,14 +49,13 @@ object Server {
                 message {
                     if (message.photo != null) {
                         UserInteractor.handlePhoto(this)
-                    }
-                    if (message.document != null) {
+                    } else if (message.document != null) {
                         UserInteractor.handleDocument(this)
-                    }
-                    if (textIsCommand(message.text)) {
+                    } else if (textIsCommand(message.text)) {
                         UserInteractor.handleCommand(this)
+                    } else {
+                        UserInteractor.handleText(this)
                     }
-                    UserInteractor.handleText(this)
                 }
             }
         }
