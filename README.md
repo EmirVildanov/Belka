@@ -1,10 +1,11 @@
-# BlaBlaElka
+# BeLkA
 
-## Application for finding elka<sup>[1]</sup> (and not only) interlocutors
+## Telegram bot for finding an interlocutor in public transport rides and pedestrian walks
 
 <img src="readme_data/Elka.jpg" width="1280" height="361" alt="Elka">
 
 ### About
+Like BlaBlaCar, but BlaBlaElka<sup>[1]</sup>, but **BLA** stands for intention to talk and not for the fact of talk.
 
 This application supposed to an application for students of SPbU<sup>[2]</sup> who live in the PUNK<sup>[3]</sup>
 dormitory and usually travel to town by suburban train. It would give them an opportunity to find an interlocutor for a
@@ -32,10 +33,10 @@ BlaBlaCar, for example).
     * 🔢 Age
     * 🗒 Small about section
     * 📸 Photo (optionally)
-* There works a rating system: users leave a rate and write a meaningful feedback about the interlocutor he/she was
+* There works a feedback system: users leave a rate and write a meaningful feedback about the interlocutor he/she was
   matched with. User may leave feedback in two cases:
     * When the application succeeded and there was a match between two users. User must add feedback after every
-      succeeded match. **If user doesn't leave a feedback, it's rating downsizing**;
+      succeeded match. **If user doesn't leave a feedback, it gets unreliability mark**;
     * While analyzing other user's profile in two cases:
         * Analyzing existed application;
         * Analyzing request for accepting his/her application.
@@ -49,21 +50,6 @@ BlaBlaCar, for example).
   Pedestrian application is the only one where FROM and TO points may coincide.
 * It **would** be great to have an opportunity to subscribe on new applications updates, so you don't miss an
   opportunity.
-
-### TODO:
-
-- [ ] Change app name so we won't have problems from BlaBlaCar's side
-- [ ] Update .sh so it creates accounts database on machine
-- [ ] data/db dir must be created in the root folder: `sudo chmod -R go+w /data/db`
-- [ ] [look at course on kubernetes](https://www.edx.org/course/introduction-to-kubernetes)
-- [ ] Need to start redis with `redis-server`
-- [ ] configure kubernetes
-- [ ] 
-  From [Docker security tips](https://blog.aquasec.com/docker-security-best-practices): [run the docker container as a non-root user](https://docs.docker.com/engine/security/rootless/)
-- [ ] Add proxy for RideInfoFetcher
-- [ ] [Pass configs to image through secrets](https://kubernetes.io/docs/concepts/configuration/secret/)
-- [ ] Add streamlit website so users can make applications more comfortably
-- [ ] Add `credentials` field to AccountInfo so users may authorize securely if it's needed
 
 ### Architecture
 
