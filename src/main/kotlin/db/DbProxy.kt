@@ -28,7 +28,15 @@ class DbProxy: DbInterface {
         MongoDbConnector.changeSurname(id, to)
     }
 
+    override suspend fun changePhoto(id: Long, to: String) {
+        MongoDbConnector.changePhoto(id, to)
+    }
+
     override suspend fun createNewStatistics(userId: Long): Statistics {
         return MongoDbConnector.createNewStatistics(userId)
+    }
+
+    override suspend fun changeAbout(id: Long, to: String) {
+        MongoDbConnector.changeAbout(id, to)
     }
 }

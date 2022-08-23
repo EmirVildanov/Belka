@@ -11,5 +11,7 @@ interface DbInterface {
     suspend fun changeAccountState(id: Long, to: UserState)
     suspend fun changeName(id: Long, to: String)
     suspend fun changeSurname(id: Long, to: String)
+    suspend fun changePhoto(id: Long, to: String)
     suspend fun createNewStatistics(userId: Long): Statistics
+    suspend fun changeAbout(id: Long, to: String)
 }

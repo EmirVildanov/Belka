@@ -5,6 +5,7 @@
 <img src="readme_data/Elka.jpg" width="1280" height="361" alt="Elka">
 
 ### About
+
 Like BlaBlaCar, but BlaBlaElka<sup>[1]</sup>, but **BLA** stands for intention to talk and not for the fact of talk.
 
 This application supposed to an application for students of SPbU<sup>[2]</sup> who live in the PUNK<sup>[3]</sup>
@@ -30,7 +31,7 @@ BlaBlaCar, for example).
 * User have to fill an account info with following information:
     * 👤 Name
     * 👥 Surname (optionally)
-    * 🔢 Age
+    * 🔢 Age (optionally)
     * 🗒 Small about section
     * 📸 Photo (optionally)
 * There works a feedback system: users leave a rate and write a meaningful feedback about the interlocutor he/she was
@@ -57,27 +58,38 @@ BlaBlaCar, for example).
 * **[VkJavaSDK](https://github.com/VKCOM/vk-java-sdk)** for Vk bot frontend **TBD**
 * **MongoDb** for storing data
 * **Redis** for caching:
-  * Network calls (such as requests to Yandex Rasp API)
-  * MongoDb calls
+    * Network calls (such as requests to Yandex Rasp API)
+    * MongoDb calls
 * **Ktor** for http requests
 * **Yandex Rasp API** for fetching rides info. On first request <FROM-TO> in a day it stores information in db (cache?).
 
 ### Development
 
-* I **decided** not to use ktlint as I had problems with its configuration. Using detekt, guys:
-  * Run `./gradlew detekt` before pushing
-  * File > Settings > Project Settings > Code Style > Kotlin > Imports > General > Use single name import
-  * Remove everything from "Package to use Imports with *"
-* In order to run tests use `./gradlew check`
-* Using IntelliJIDEA you may connect to local MongoDb in order to work with data more comfortably.
+Tested on Ubuntu 20.04.4 LTS.
+
+* Main functionality:
+    1. Run `mongod`.
+        * Using IntelliJIDEA you may connect to local MongoDb in order to work with data more comfortably.
+    2. Run `redis-server`.
+        * Redis plugin for IntelliJIDEA is "Paid", OMG.
+    3. Run `./gradlew run`.
+    4. Communicate with **@BeLkAH_bot**.
+* Tests:
+    * Run `./gradlew test`.
+* Code style. I **decided** not to use ktlint as I had problems with its configuration. Using detekt, guys:
+    * Run `./gradlew detekt` before pushing.
+        * File > Settings > Project Settings > Code Style > Kotlin > Imports > General > Use single name import.
+        * Remove everything from "Package to use Imports with *".
 
 ### Dev links:
 
 Lucid app gives limited number of elements on diagram for non-premium users. That's why there are two diagrams: one for
 main and one for side logic.
 
-* [Link to chat bot **side** logic states](https://lucid.app/lucidchart/be301ab7-e7b3-4da6-8945-35b652179a83/edit?invitationId=inv_b88953e5-c8e9-458f-963f-41b3ad14658e&page=0_0#)
-* [Link to chat bot **main** logic states](https://lucid.app/lucidchart/2fadb7ff-78ad-4e3d-a2ea-88541bf43511/edit?viewport_loc=-1259%2C82%2C3328%2C1684%2C0_0&invitationId=inv_95e2bc04-b5fd-4e88-abc6-63ce8b9980d3#)
+* [Link to chat bot **
+  side** logic states](https://lucid.app/lucidchart/be301ab7-e7b3-4da6-8945-35b652179a83/edit?invitationId=inv_b88953e5-c8e9-458f-963f-41b3ad14658e&page=0_0#)
+* [Link to chat bot **
+  main** logic states](https://lucid.app/lucidchart/2fadb7ff-78ad-4e3d-a2ea-88541bf43511/edit?viewport_loc=-1259%2C82%2C3328%2C1684%2C0_0&invitationId=inv_95e2bc04-b5fd-4e88-abc6-63ce8b9980d3#)
 * [Link to database diagram](https://dbdiagram.io/d/62ed062bc2d9cf52fa52969a)
 
 I would like to see you as a contributor to this project :)

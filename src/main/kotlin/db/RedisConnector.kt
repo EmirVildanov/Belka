@@ -15,7 +15,7 @@ object RedisConnector {
     private const val REDIS_CONFIG_HOST_KEY_NAME = "host"
     private const val REDIS_CONFIG_PORT_KEY_NAME = "port"
 
-    private var client: RedisClient? = null
+    private lateinit var client: RedisClient
     private var connection: StatefulRedisConnection<String, String>? = null
     private lateinit var asyncCommands: RedisAsyncCommands<String, String>
 
@@ -23,12 +23,9 @@ object RedisConnector {
         val host = Utils.getProperty(REDIS_CONFIG_FILE_NAME, REDIS_CONFIG_HOST_KEY_NAME)
         val port = Utils.getProperty(REDIS_CONFIG_FILE_NAME, REDIS_CONFIG_PORT_KEY_NAME)
 
-        val config = ClientResources.create()
         client = RedisClient.create("redis://@$host:$port/")
-        if (client != null) {
-            connection = client!!.connect()
-            asyncCommands = connection!!.async()
-        }
+        connection = client.connect()
+        asyncCommands = connection!!.async()
     }
 
     fun setApplicationInfo(applicationId: Long, application: Application) {
@@ -42,9 +39,9 @@ object RedisConnector {
     }
 
     fun stop() {
-        if (connection != null && client  != null) {
+        if (connection != null) {
             connection!!.close()
-            client!!.shutdown()
+            client.shutdown()
         }
     }
 }

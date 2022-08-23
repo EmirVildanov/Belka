@@ -6,6 +6,7 @@ enum class UserCommand(val commandName: String) {
     ACCOUNT("account"),
         NAME("name"),
         SURNAME("surname"),
+        ABOUT("about"),
     FIND("find"),
     LOAD_PHOTO("load_photo"),
     BACK("back"),

@@ -8,17 +8,24 @@ enum class UserState {
 
     FILLING_NAME,
     FILLING_SURNAME,
+    FILLING_ABOUT,
 
-    STARTED,
-    CHOOSING_DIRECTION;
+    STARTED;
 
     val allowedExecutions: List<Execution>
         get() = when (this) {
             NOT_STARTED -> listOf(StartExecution)
             MAIN_MENU -> listOf(FillAccountInfoExecution, HelpExecution, FindExecution)
-            FILLING_ACCOUNT_INFO -> listOf(FillNameCommandExecution, FillSurnameCommandExecution, BackExecution(MAIN_MENU))
-            FILLING_NAME -> listOf(FillNameExecution, BackExecution(FILLING_ACCOUNT_INFO))
-            FILLING_SURNAME -> listOf(FillSurnameNameExecution, BackExecution(FILLING_ACCOUNT_INFO))
+            FILLING_ACCOUNT_INFO -> listOf(
+                FillNameCommandExecution,
+                FillSurnameCommandExecution,
+                FillAboutCommandExecution,
+                BackExecution(MAIN_MENU)
+            )
+            FILLING_NAME -> listOf(FillNameTextExecution, BackExecution(FILLING_ACCOUNT_INFO))
+            FILLING_SURNAME -> listOf(FillSurnameNameTextExecution, BackExecution(FILLING_ACCOUNT_INFO))
+            FILLING_ABOUT -> listOf(FillAboutTextExecution, BackExecution(FILLING_ACCOUNT_INFO))
+            STARTED -> listOf(BackExecution(MAIN_MENU))
             else -> listOf()
         }
 }

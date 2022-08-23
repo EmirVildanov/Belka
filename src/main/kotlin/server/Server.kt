@@ -7,8 +7,9 @@ import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.logging.LogLevel
 import db.MongoDbConnector
 import db.RedisConnector
+import server.rides.RideInfoFetcher
 import server.userInteractor.UserInteractor
-import serverCommunication.ServerCommunicator
+import status.check.ServerStatusChecker
 import utils.CustomLogger
 import utils.Utils
 import utils.Utils.textIsCommand
@@ -27,13 +28,12 @@ object Server {
             startBotPolling()
         } catch (e: IllegalArgumentException) {
             CustomLogger.logExceptionMessage("Probably couldn't open properties file", e)
-        } catch (e: Exception) {
-            throw e
         }
     }
 
     private fun init() {
         accessToken = Utils.getProperty(TELEGRAM_CONFIG_FILE_NAME, TELEGRAM_CONFIG_TOKEN_KEY_NAME)
+        RideInfoFetcher.init()
 //        startMongoDbServer()
         MongoDbConnector.init()
 //        RedisConnector.init()
@@ -64,8 +64,8 @@ object Server {
     }
 
     private fun startMongoDbServer() {
-        ServerCommunicator.runMongoDb()
-        while (!ServerCommunicator.isMongodbRunning()) {
+        ServerStatusChecker.runMongoDb()
+        while (!ServerStatusChecker.isMongodbRunning()) {
             Thread.sleep(1000)
             continue
         }
@@ -78,5 +78,10 @@ object Server {
         RedisConnector.stop()
         NetworkInteractor.stop()
         exitProcess(0)
+    }
+
+    fun forceKill() {
+        UserInteractor.stop()
+        stop()
     }
 }

@@ -18,11 +18,11 @@ import org.litote.kmongo.setValue
 import server.userInteractor.getChatId
 
 object MongoDbConnector: DbInterface {
-    private const val BLA_BLA_ELKA_DB_NAME = "blablaelka"
-    private const val ACCOUNT_COLLECTION_NAME = "account"
+    private const val BELKA_DB_NAME = "belka"
+    private const val ACCOUNT_COLLECTION_NAME = "accountinfo"
     private const val STATISTICS_COLLECTION_NAME = "statistics"
 
-    private var client: CoroutineClient? = null
+    private lateinit var client: CoroutineClient
     private lateinit var db: CoroutineDatabase
     private lateinit var accountInfoCollection: CoroutineCollection<AccountInfo>
     private lateinit var statisticsCollection: CoroutineCollection<Statistics>
@@ -30,7 +30,7 @@ object MongoDbConnector: DbInterface {
 
     fun init() {
         client = KMongo.createClient().coroutine
-        db = client!!.getDatabase(BLA_BLA_ELKA_DB_NAME)
+        db = client.getDatabase(BELKA_DB_NAME)
         runBlocking {
             val collections = db.listCollectionNames()
             if (!collections.contains(ACCOUNT_COLLECTION_NAME)) {
@@ -78,15 +78,21 @@ object MongoDbConnector: DbInterface {
         accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(AccountInfo::surname, to))
     }
 
+    override suspend fun changeAbout(id: Long, to: String) {
+        accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(AccountInfo::about, to))
+    }
+
+    override suspend fun changePhoto(id: Long, to: String) {
+        accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(AccountInfo::photo, to))
+    }
+
     override suspend fun createNewStatistics(userId: Long): Statistics {
         val newId = statisticsCollection.countDocuments(Statistics::id gte 1) + 1
         return Statistics(newId, userId, 0)
     }
 
     fun stop() {
-        if (client != null) {
-            client!!.close()
-        }
+        client.close()
     }
 }
 

@@ -1,16 +1,17 @@
-package server
+package server.rides
 
-import io.ktor.client.call.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.call.body
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpHeaders
 import model.RideInfo
 import model.RideOpportunitiesInfo
-import model.enum.TransportType
+import model.enum.TransportType.SUBURBAN
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
+import server.NetworkInteractor
 import utils.Utils
 
-object RideInfoFetcher {
+object RideInfoFetcher : RidesInfoFetcherInterface {
 
     private const val YANDEX_API_CONFIG_FILE_NAME = "yandexapiconfig.properties"
 
@@ -32,7 +33,7 @@ object RideInfoFetcher {
         yandexServiceApiKey = Utils.getProperty(YANDEX_API_CONFIG_FILE_NAME, YANDEX_API_CONFIG_API_KEY_NAME)
     }
 
-    suspend fun getDormitoryToTownRides(date: LocalDate): List<RideInfo> {
+    override suspend fun getDormitoryToTownRides(date: LocalDate): List<RideInfo> {
         val response: RideOpportunitiesInfo =
             getStationsFromToInfo(
                 YANDEX_API_UNIVERSITY_STATION_CODE,
@@ -42,7 +43,7 @@ object RideInfoFetcher {
         return response.segments.filter { DateTime(it.departure).toDateTime() > DateTime.now().toDateTime() }
     }
 
-    suspend fun getTownToDormitoryRides(date: LocalDate): List<RideInfo> {
+    override suspend fun getTownToDormitoryRides(date: LocalDate): List<RideInfo> {
         val response: RideOpportunitiesInfo =
             getStationsFromToInfo(
                 YANDEX_API_BALTIYSKY_RAILWAY_STATION_CODE,
@@ -52,7 +53,7 @@ object RideInfoFetcher {
         return response.segments.filter { DateTime(it.departure).toDateTime() > DateTime.now().toDateTime() }
     }
 
-    suspend fun getStationsFromToInfo(from: String, to: String, date: LocalDate): HttpResponse {
+    private suspend fun getStationsFromToInfo(from: String, to: String, date: LocalDate): HttpResponse {
         return NetworkInteractor.get(
             YANDEX_API_BASE_URL,
             listOf(HttpHeaders.Authorization to yandexServiceApiKey),
@@ -60,7 +61,7 @@ object RideInfoFetcher {
                 YANDEX_API_FROM_KEY_NAME to from,
                 YANDEX_API_TO_KEY_NAME to to,
                 YANDEX_API_DATE_KEY_NAME to date.toString(),
-                YANDEX_API_TRANSPORT_TYPES_KEY_NAME to TransportType.SUBURBAN.transportName,
+                YANDEX_API_TRANSPORT_TYPES_KEY_NAME to SUBURBAN.transportName,
                 YANDEX_API_TRANSFERS_TYPES_KEY_NAME to YANDEX_API_TRANSFER
             )
         )

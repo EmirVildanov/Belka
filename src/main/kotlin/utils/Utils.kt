@@ -28,7 +28,7 @@ object Utils {
             val getFileUrl = "https://api.telegram.org/bot$botToken/getFile?file_id=$fileId"
             CustomLogger.logInfoMessage("Get file url = $getFileUrl")
             val fileResult: FileResult = NetworkInteractor.get(getFileUrl).body()
-            val filePath = fileResult.file_path
+            val filePath = fileResult.filePath
             val downloadFileUrl = "https://api.telegram.org/file/bot$botToken/$filePath"
             NetworkInteractor.downloadFile(downloadFileUrl)
         }
@@ -39,4 +39,4 @@ object Utils {
 data class GetFileInfo(val result: FileResult)
 
 @Serializable
-data class FileResult(val file_path: String)
+data class FileResult(val filePath: String)

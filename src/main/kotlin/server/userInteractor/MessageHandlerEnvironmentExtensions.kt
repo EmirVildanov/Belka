@@ -5,6 +5,7 @@ import com.github.kotlintelegrambot.entities.ChatId
 import com.github.kotlintelegrambot.entities.KeyboardReplyMarkup
 import com.github.kotlintelegrambot.entities.TelegramFile
 
+// Should also consider it getAccountId()
 fun MessageHandlerEnvironment.getChatId(): ChatId.Id {
     return ChatId.fromId(this.message.chat.id)
 }

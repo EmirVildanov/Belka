@@ -10,7 +10,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import model.AccountInfo
 import db.MongoDbConnector
-import server.userInteractor.Execution.CommandExecution
+import kotlinx.coroutines.cancel
+import server.userInteractor.Execution.ICommandExecution
 import server.userInteractor.Execution.WithOnExecuteLogic
 import server.userInteractor.Execution.WithPreExecuteLogic
 import server.userInteractor.Execution.PreExecuteResult
@@ -25,46 +26,31 @@ object UserInteractor {
     private val job: Job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Default + job)
 
-    sealed class ExecutionSearchResult<T> where T : Execution {
-        class Ok<T : Execution>(val execution: T) : ExecutionSearchResult<T>()
-        class NotFound<T : Execution> : ExecutionSearchResult<T>()
+    sealed class ExecutionSearchResult {
+        class Ok(val execution: Execution) : ExecutionSearchResult()
+        object NotFound : ExecutionSearchResult()
     }
 
     private fun getCommandExecution(
         currentState: UserState,
         command: UserCommand
-    ): ExecutionSearchResult<CommandExecution> {
+    ): ExecutionSearchResult {
         val searchResult =
-            currentState.allowedExecutions.filterIsInstance<CommandExecution>().find { it.command == command }
-        searchResult?.let { return Ok(it) }
-            ?: return NotFound()
+            currentState.allowedExecutions.filterIsInstance<ICommandExecution>().find { it.command == command }
+        searchResult?.let { return Ok(it as Execution) } ?: return NotFound
     }
 
     /**
      * It's expected that every state that can except text can except only one textExecution
      */
-    private fun getTextExecution(currentState: UserState): ExecutionSearchResult<TextExecution> {
+    private fun getTextExecution(currentState: UserState): ExecutionSearchResult {
         val allowedExecutions =
             currentState.allowedExecutions.filterIsInstance<TextExecution>()
         if (allowedExecutions.isEmpty()) {
-            return NotFound()
+            return NotFound
         }
         return Ok(allowedExecutions.first())
     }
-
-//    fun handleCommandAccount(env: CommandHandlerEnvironment) = scope.launch {
-//        val keyboardButtonsList = listOf(listOf("/First", "/Second"), listOf("/Third"))
-//        val keyboardReplyMarkup = KeyboardCreator.createTelegramKeyboard(keyboardButtonsList)
-//        val result = env.bot.sendMessage(
-//            chatId = ChatId.fromId(env.message.chat.id),
-//            text = "Let's fill the account info!",
-//            replyMarkup = keyboardReplyMarkup
-//        )
-//        result.fold({
-//        }, {
-//            env.bot.sendMessage(ChatId.fromId(env.message.chat.id), text = "Something went wrong :( $it")
-//        })
-//    }
 
     fun handleCommand(env: MessageHandlerEnvironment) = scope.launch {
         val commandName = env.message.text!!.drop(1)
@@ -91,10 +77,10 @@ object UserInteractor {
         handleExecutionCycle(env, accountInfo, executionResult, "Such text is not accepted in your state.")
     }
 
-    private suspend fun <T : Execution> handleExecutionCycle(
+    private suspend fun handleExecutionCycle(
         env: MessageHandlerEnvironment,
         accountInfo: AccountInfo,
-        executionResult: ExecutionSearchResult<T>,
+        executionResult: ExecutionSearchResult,
         searchNotFoundMessage: String
     ) {
         if (executionResult is NotFound) {
@@ -126,18 +112,24 @@ object UserInteractor {
         }
     }
 
-    fun handleDocument(env: MessageHandlerEnvironment) {
+    fun handleDocument(env: MessageHandlerEnvironment) = scope.launch {
         env.bot.sendMessage(
             chatId = ChatId.fromId(env.message.chat.id),
             text = "Please send me photo not as a document (without compression)."
         )
     }
 
-    fun handlePhoto(env: MessageHandlerEnvironment) {
-        val fileId = env.message.photo!![0].fileId
-        if (env.message.photo!![0].fileSize!! > MAX_PHOTO_SIZE_BYTES) {
+    fun handlePhoto(env: MessageHandlerEnvironment) = scope.launch {
+        val photo = env.message.photo
+        val fileId = photo!![0].fileId
+        if (photo!![0].fileSize!! > MAX_PHOTO_SIZE_BYTES) {
             env.bot.sendMessage(env.getChatId(), "File size must be less than 20Mb.")
         }
+        MongoDbConnector.changePhoto(env.getChatId().id, fileId)
+    }
+
+    fun stop() {
+        scope.cancel("Shutting down the server.")
     }
 }
 

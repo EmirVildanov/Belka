@@ -1,9 +1,9 @@
-package serverCommunication
+package status.check
 
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-object ServerCommunicator {
+object ServerStatusChecker {
     // see https://stackoverflow.com/questions/11774887/how-to-stop-mongo-db-in-one-command
     // to find how to stop mongodb server
     fun runMongoDb() {
