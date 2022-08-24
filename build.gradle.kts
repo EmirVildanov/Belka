@@ -59,6 +59,7 @@ dependencies {
 }
 
 detekt {
+    ignoreFailures = true
     autoCorrect = true
     buildUponDefaultConfig = true // preconfigure defaults
     allRules = false // activate all available (even unstable) rules.

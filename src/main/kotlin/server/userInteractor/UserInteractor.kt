@@ -120,9 +120,11 @@ object UserInteractor {
     }
 
     fun handlePhoto(env: MessageHandlerEnvironment) = scope.launch {
-        val photo = env.message.photo
-        val fileId = photo!![0].fileId
-        if (photo!![0].fileSize!! > MAX_PHOTO_SIZE_BYTES) {
+        val photo =
+            env.message.photo?.let { it[0] } ?: throw RecourcesHandlingException("Photo fot handling wasn't provided.")
+        val photoSize = photo.fileSize ?: throw RecourcesHandlingException("Can't determine photo size.")
+        val fileId = photo.fileId
+        if (photoSize > MAX_PHOTO_SIZE_BYTES) {
             env.bot.sendMessage(env.getChatId(), "File size must be less than 20Mb.")
         }
         MongoDbConnector.changePhoto(env.getChatId().id, fileId)
@@ -133,4 +135,5 @@ object UserInteractor {
     }
 }
 
+class RecourcesHandlingException(override val message: String?) : Exception()
 class WrongStateException(override val message: String?) : Exception()

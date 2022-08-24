@@ -3,8 +3,6 @@ package server.rides
 import io.ktor.client.call.body
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
-import model.RideInfo
-import model.RideOpportunitiesInfo
 import model.enum.TransportType.SUBURBAN
 import org.joda.time.DateTime
 import org.joda.time.LocalDate

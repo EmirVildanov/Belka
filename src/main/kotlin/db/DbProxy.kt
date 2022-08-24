@@ -32,7 +32,7 @@ class DbProxy: DbInterface {
         MongoDbConnector.changePhoto(id, to)
     }
 
-    override suspend fun createNewStatistics(userId: Long): Statistics {
+    override suspend fun createNewStatistics(userId: Long): Long {
         return MongoDbConnector.createNewStatistics(userId)
     }
 

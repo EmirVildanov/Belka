@@ -1,7 +1,7 @@
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import model.StationInfo
+import server.rides.StationInfo
 import model.SucceededRide
 import org.joda.time.DateTime
 import kotlin.test.Test

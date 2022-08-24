@@ -3,7 +3,10 @@ package db
 import com.github.kotlintelegrambot.dispatcher.handlers.MessageHandlerEnvironment
 import kotlinx.coroutines.runBlocking
 import model.AccountInfo
+import model.AppFeedback
 import model.Statistics
+import model.UserReview
+import model.generateCredentials
 import server.userInteractor.UserState
 import org.bson.BsonInvalidOperationException
 import org.joda.time.DateTime
@@ -17,7 +20,7 @@ import org.litote.kmongo.reactivestreams.KMongo
 import org.litote.kmongo.setValue
 import server.userInteractor.getChatId
 
-object MongoDbConnector: DbInterface {
+object MongoDbConnector : DbInterface {
     private const val BELKA_DB_NAME = "belka"
     private const val ACCOUNT_COLLECTION_NAME = "accountinfo"
     private const val STATISTICS_COLLECTION_NAME = "statistics"
@@ -26,27 +29,35 @@ object MongoDbConnector: DbInterface {
     private lateinit var db: CoroutineDatabase
     private lateinit var accountInfoCollection: CoroutineCollection<AccountInfo>
     private lateinit var statisticsCollection: CoroutineCollection<Statistics>
-
+    private lateinit var reviewCollection: CoroutineCollection<UserReview>
+    private lateinit var appFeedbackCollection: CoroutineCollection<AppFeedback>
 
     fun init() {
         client = KMongo.createClient().coroutine
         db = client.getDatabase(BELKA_DB_NAME)
-        runBlocking {
-            val collections = db.listCollectionNames()
-            if (!collections.contains(ACCOUNT_COLLECTION_NAME)) {
-                db.createCollection(ACCOUNT_COLLECTION_NAME)
-            }
-            if (!collections.contains(STATISTICS_COLLECTION_NAME)) {
-                db.createCollection(STATISTICS_COLLECTION_NAME)
-            }
-        }
+//        runBlocking {
+//            val collections = db.listCollectionNames()
+//            if (!collections.contains(ACCOUNT_COLLECTION_NAME)) {
+//                db.createCollection(ACCOUNT_COLLECTION_NAME)
+//            }
+//            if (!collections.contains(STATISTICS_COLLECTION_NAME)) {
+//                db.createCollection(STATISTICS_COLLECTION_NAME)
+//            }
+//        }
         accountInfoCollection = db.getCollection()
         statisticsCollection = db.getCollection()
+        reviewCollection = db.getCollection()
+        appFeedbackCollection = db.getCollection()
     }
 
     override suspend fun createNewAccount(env: MessageHandlerEnvironment): AccountInfo {
         val chatId = env.getChatId().id
-        val accountInfo = AccountInfo(id = chatId, createdAt = DateTime.now(), statistics = createNewStatistics(chatId))
+        val accountInfo = AccountInfo(
+            id = chatId,
+            createdAt = DateTime.now(),
+            statistics = createNewStatistics(chatId),
+            credentials = generateCredentials()
+        )
         accountInfoCollection.insertOne(accountInfo)
         return accountInfo
     }
@@ -86,9 +97,18 @@ object MongoDbConnector: DbInterface {
         accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(AccountInfo::photo, to))
     }
 
-    override suspend fun createNewStatistics(userId: Long): Statistics {
+    override suspend fun createNewStatistics(userId: Long): Long {
         val newId = statisticsCollection.countDocuments(Statistics::id gte 1) + 1
-        return Statistics(newId, userId, 0)
+        val newStatistics = Statistics(newId, userId, 0)
+        statisticsCollection.insertOne(newStatistics)
+        return newId
+    }
+
+    override suspend fun addAppFeedback(fromId: Long, text: String) : Long {
+        val newId = appFeedbackCollection.countDocuments(AppFeedback::id gte 1) + 1
+        val newFeedback = AppFeedback(fromId, newId, text)
+        appFeedbackCollection.insertOne(newFeedback)
+        return newId
     }
 
     fun stop() {

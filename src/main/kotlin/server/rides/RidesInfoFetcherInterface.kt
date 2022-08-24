@@ -1,6 +1,5 @@
 package server.rides
 
-import model.RideInfo
 import org.joda.time.LocalDate
 
 interface RidesInfoFetcherInterface {

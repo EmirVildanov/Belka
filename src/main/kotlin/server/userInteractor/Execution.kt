@@ -17,23 +17,26 @@ import server.userInteractor.UserCommand.ABOUT
 import server.userInteractor.UserCommand.ACCOUNT
 import server.userInteractor.UserCommand.BACK
 import server.userInteractor.UserCommand.FIND
+import server.userInteractor.UserCommand.LEAVE_FEEDBACK
 import server.userInteractor.UserCommand.NAME
 import server.userInteractor.UserCommand.OK
 import server.userInteractor.UserCommand.START
 import server.userInteractor.UserCommand.SURNAME
+import server.userInteractor.UserState.ASKING_TO_RATE
 import server.userInteractor.UserState.FILLING_ABOUT
 import server.userInteractor.UserState.FILLING_ACCOUNT_INFO
 import server.userInteractor.UserState.FILLING_NAME
 import server.userInteractor.UserState.FILLING_SURNAME
 import server.userInteractor.UserState.MAIN_MENU
 import server.userInteractor.UserState.STARTED
+import server.userInteractor.UserState.WRITING_APP_FEEDBACK
 
 /**
  * Class that represents action, called when user chose some variant from keyboard.
  * By the way you may see it as a Button class. As Execution logic is always linked with some button click
  */
 sealed class Execution {
-    protected var accountInfo: AccountInfo? = null
+    protected lateinit var accountInfo: AccountInfo
 
     fun obtainAccountInfo(accountInfo: AccountInfo) {
         this.accountInfo = accountInfo
@@ -58,10 +61,8 @@ sealed class Execution {
     abstract class StateChangeExecution(open val keyboardCommentText: String, open val toState: UserState) :
         WithOnExecuteLogic, Execution() {
         private suspend fun changeState(env: MessageHandlerEnvironment, toState: UserState) {
-            if (accountInfo == null) {
-                throw AccountInfoNotObtainedException("obtainAccountInfo must be called before changing state.")
-            }
-            MongoDbConnector.changeAccountState(accountInfo!!.id, toState)
+            assert(this::accountInfo.isInitialized) { "obtainAccountInfo must be called before changing state." }
+            MongoDbConnector.changeAccountState(accountInfo.id, toState)
             val keyboardReplyMarkup = KeyboardCreator.createKeyboard(toState)
             val result = env.bot.sendMessage(
                 text = keyboardCommentText,
@@ -114,20 +115,16 @@ sealed class Execution {
      */
     abstract class TextExecution(override val keyboardCommentText: String, override val toState: UserState) :
         StateChangeExecution(keyboardCommentText, toState) {
-        protected var text: String? = null
+        protected lateinit var text: String
 
         fun obtainText(text: String) {
             this.text = text
         }
 
         final override suspend fun doInnerInnerJob(env: MessageHandlerEnvironment) {
-            if (text == null) {
-                throw TextNotObtainedException("obtainText must be called before handling text.")
-            }
-            if (accountInfo == null) {
-                throw AccountInfoNotObtainedException("obtainAccountInfo must be called before handling text.")
-            }
-            handleTextInner(text!!)
+            assert(this::text.isInitialized) { "obtainText must be called before handling text." }
+            assert(this::accountInfo.isInitialized) { "obtainAccountInfo must be called before handling text." }
+            handleTextInner(text)
         }
 
         abstract suspend fun handleTextInner(text: String)
@@ -141,6 +138,7 @@ sealed class Execution {
 object StartExecution : JustChangeStateCommandExecution(START, "Okay, let's start!", MAIN_MENU)
 class BackExecution(toState: UserState) : JustChangeStateCommandExecution(BACK, "Back.", toState)
 class OkExecution(toState: UserState) : JustChangeStateCommandExecution(OK, "Ok.", toState)
+//class NoExecution(toState: UserState) : JustChangeStateCommandExecution(OK, "Ok.", toState)
 
 object HelpExecution : WithOnExecuteLogic, NonStateChangeCommandExecution(UserCommand.HELP) {
     private const val HELP_MESSAGE = "There is how this application works:\n" +
@@ -151,6 +149,25 @@ object HelpExecution : WithOnExecuteLogic, NonStateChangeCommandExecution(UserCo
     override suspend fun onExecute(env: MessageHandlerEnvironment) {
         env.sendMessage(HELP_MESSAGE)
     }
+}
+
+object LeaveFeedbackCommandExecution :
+    JustChangeStateCommandExecution(LEAVE_FEEDBACK, "Okay. Please, send me your feedback.", WRITING_APP_FEEDBACK)
+
+object LeaveFeedbackTextExecution : WithPreExecuteLogic, TextExecution("Thank you for your feedback!", MAIN_MENU) {
+    private const val MAX_FEEDBACK_LENGTH = 150;
+
+    override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
+        if (text.length >= MAX_FEEDBACK_LENGTH) {
+            return PreExecuteResult.Error("Feedback must be shorter than $MAX_FEEDBACK_LENGTH symbols.")
+        }
+        return PreExecuteResult.Ok
+    }
+
+    override suspend fun handleTextInner(text: String) {
+        MongoDbConnector.addAppFeedback(accountInfo.id, text)
+    }
+
 }
 
 object FillAccountInfoExecution :
@@ -178,26 +195,27 @@ object FillNameTextExecution : WithPreExecuteLogic, TextExecution("Name is chang
     const val NAME_MAX_LENGTH = 13;
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.changeName(accountInfo!!.id, text)
+        MongoDbConnector.changeName(accountInfo.id, text)
     }
 
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
-        if (text!!.length > NAME_MAX_LENGTH) {
+        if (text.length > NAME_MAX_LENGTH) {
             return PreExecuteResult.Error("User name must be not be greater than $NAME_MAX_LENGTH")
         }
         return PreExecuteResult.Ok
     }
 }
 
-object FillSurnameNameTextExecution : WithPreExecuteLogic, TextExecution("Surname is changed.", FILLING_ACCOUNT_INFO) {
+object FillSurnameNameTextExecution : WithPreExecuteLogic,
+    TextExecution("Surname is changed.", FILLING_ACCOUNT_INFO) {
     const val SURNAME_MAX_LENGTH = 13;
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.changeSurname(accountInfo!!.id, text)
+        MongoDbConnector.changeSurname(accountInfo.id, text)
     }
 
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
-        if (text!!.length > SURNAME_MAX_LENGTH) {
+        if (text.length > SURNAME_MAX_LENGTH) {
             return PreExecuteResult.Error("User name must be not be greater than $SURNAME_MAX_LENGTH")
         }
         return PreExecuteResult.Ok
@@ -208,20 +226,21 @@ object FillAboutTextExecution : WithPreExecuteLogic, TextExecution("About is cha
     const val ABOUT_MAX_LENGTH = 150;
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.changeAbout(accountInfo!!.id, text)
+        MongoDbConnector.changeAbout(accountInfo.id, text)
     }
 
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
-        if (text!!.length > ABOUT_MAX_LENGTH) {
-            return PreExecuteResult.Error("About must be not be greater than $ABOUT_MAX_LENGTH")
+        if (text.length > ABOUT_MAX_LENGTH) {
+            return PreExecuteResult.Error("About must be not be greater than $ABOUT_MAX_LENGTH.")
         }
         return PreExecuteResult.Ok
     }
 }
 
-object FindExecution : WithPreExecuteLogic, JustChangeStateCommandExecution(FIND, "Let's find some ride!", STARTED) {
+object FindExecution : WithPreExecuteLogic,
+    JustChangeStateCommandExecution(FIND, "Let's find some ride!", STARTED) {
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
-        if (accountInfo!!.name == null || accountInfo!!.about == null) {
+        if (accountInfo.name == null || accountInfo.about == null) {
             return PreExecuteResult.Error(
                 "You must fill fields [name], [about] in order to start working with applications."
             )
@@ -230,14 +249,23 @@ object FindExecution : WithPreExecuteLogic, JustChangeStateCommandExecution(FIND
     }
 }
 
-private const val RATE_MIN_VALUE = 1
-private const val RATE_MAX_VALUE = 10
-private const val TEXT_FEEDBACK_SYMBOLS_BOUND = 150
+class ApplicationMatchExecution(userCommand: UserCommand) : JustChangeStateCommandExecution(
+    userCommand,
+    "Okay. Write some text or get a bad mark for non writing a feedback.",
+    ASKING_TO_RATE
+)
 
-private fun checkRateInBounds(rate: Int): Boolean {
-    return rate in RATE_MIN_VALUE..RATE_MAX_VALUE;
-}
+object RatingMatchTextExecution : WithPreExecuteLogic, TextExecution("Your rate is accepted. Thank You!", STARTED) {
+    private const val RATING_MAX_LENGTH = 150
 
-private fun checkTextInBounds(text: String): Boolean {
-    return text.length <= TEXT_FEEDBACK_SYMBOLS_BOUND;
+    override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
+        if (text.length > RATING_MAX_LENGTH) {
+            return PreExecuteResult.Error("Rating must be not be greater than $ABOUT_MAX_LENGTH.")
+        }
+        return PreExecuteResult.Ok
+    }
+
+    override suspend fun handleTextInner(text: String) {
+        TODO("Not yet implemented")
+    }
 }

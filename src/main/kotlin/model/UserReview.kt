@@ -3,8 +3,9 @@ package model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserReview(val id: Int, val from: Int, val to: Int, val rate: Int, val feedback: String)
-
-fun calculateUserNumberRating(reviews: List<UserReview>): Int {
-    return reviews.sumOf { it.rate } / reviews.size
-}
+data class UserReview(
+    val id: Long,
+    val from: Int,          // UserId sending review
+    val to: Int,            // UserId receiving review
+    val feedback: String
+)
