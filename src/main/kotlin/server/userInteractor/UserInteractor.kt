@@ -58,7 +58,7 @@ object UserInteractor {
             val command = UserCommand.valueOf(commandName.toUpperCasePreservingASCIIRules())
             var accountInfo = MongoDbConnector.getAccountInfo(env.getChatId().id)
             if (accountInfo == null) {
-                accountInfo = MongoDbConnector.createNewAccount(env)
+                accountInfo = MongoDbConnector.createNewAccount(env.getChatId().id)
             }
             val currentState = accountInfo.state
             val executionResult = getCommandExecution(currentState, command)
@@ -127,7 +127,7 @@ object UserInteractor {
         if (photoSize > MAX_PHOTO_SIZE_BYTES) {
             env.bot.sendMessage(env.getChatId(), "File size must be less than 20Mb.")
         }
-        MongoDbConnector.changePhoto(env.getChatId().id, fileId)
+        MongoDbConnector.setPhoto(env.getChatId().id, fileId)
     }
 
     fun stop() {

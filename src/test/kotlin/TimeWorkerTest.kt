@@ -2,7 +2,6 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import server.rides.StationInfo
-import model.SucceededRide
 import org.joda.time.DateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals

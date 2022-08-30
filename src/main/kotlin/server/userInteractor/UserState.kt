@@ -13,6 +13,11 @@ enum class UserState {
 
     STARTED,
 
+    CREATING_APPLICATION,
+    CHOOSING_APPLICATION,
+    EDITING,
+    CONSIDERING_MATCH,
+
     ASKING_TO_RATE;
 
     val allowedExecutions: List<Execution>
@@ -31,6 +36,7 @@ enum class UserState {
             FILLING_ABOUT -> listOf(FillAboutTextExecution, BackExecution(FILLING_ACCOUNT_INFO))
             STARTED -> listOf(BackExecution(MAIN_MENU))
 
-            ASKING_TO_RATE -> listOf(RatingMatchTextExecution, )
+            ASKING_TO_RATE -> listOf(RatingMatchTextExecution)
+            else -> listOf()
         }
 }

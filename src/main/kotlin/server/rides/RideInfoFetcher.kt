@@ -9,7 +9,7 @@ import org.joda.time.LocalDate
 import server.NetworkInteractor
 import utils.Utils
 
-object RideInfoFetcher : RidesInfoFetcherInterface {
+object RideInfoFetcher : RideInfoFetcherInterface {
 
     private const val YANDEX_API_CONFIG_FILE_NAME = "yandexapiconfig.properties"
 
@@ -32,7 +32,7 @@ object RideInfoFetcher : RidesInfoFetcherInterface {
     }
 
     override suspend fun getDormitoryToTownRides(date: LocalDate): List<RideInfo> {
-        val response: RideOpportunitiesInfo =
+        val response: RideInfo =
             getStationsFromToInfo(
                 YANDEX_API_UNIVERSITY_STATION_CODE,
                 YANDEX_API_BALTIYSKY_RAILWAY_STATION_CODE,
@@ -42,7 +42,7 @@ object RideInfoFetcher : RidesInfoFetcherInterface {
     }
 
     override suspend fun getTownToDormitoryRides(date: LocalDate): List<RideInfo> {
-        val response: RideOpportunitiesInfo =
+        val response: RideInfo =
             getStationsFromToInfo(
                 YANDEX_API_BALTIYSKY_RAILWAY_STATION_CODE,
                 YANDEX_API_UNIVERSITY_STATION_CODE,

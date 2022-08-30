@@ -19,6 +19,10 @@ object Utils {
         return prop.getProperty(propertyName)
     }
 
+    fun generateNewUUID(): UUID {
+        return UUID.randomUUID()
+    }
+
     fun textIsCommand(text: String?): Boolean {
         return !text.isNullOrBlank() && text[0] == '/'
     }

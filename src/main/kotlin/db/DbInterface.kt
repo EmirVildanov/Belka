@@ -1,18 +1,24 @@
 package db
 
-import com.github.kotlintelegrambot.dispatcher.handlers.MessageHandlerEnvironment
+import java.util.*
 import model.AccountInfo
+import model.AppFeedback
 import model.Statistics
+import org.litote.kmongo.coroutine.CoroutineFindPublisher
 import server.userInteractor.UserState
 
 interface DbInterface {
-    suspend fun createNewAccount(env: MessageHandlerEnvironment): AccountInfo
-    suspend fun getAccountInfo(id: Long): AccountInfo?
-    suspend fun changeAccountState(id: Long, to: UserState)
-    suspend fun changeName(id: Long, to: String)
-    suspend fun changeSurname(id: Long, to: String)
-    suspend fun changePhoto(id: Long, to: String)
-    suspend fun createNewStatistics(userId: Long): Long
-    suspend fun changeAbout(id: Long, to: String)
-    suspend fun addAppFeedback(fromId: Long, text: String): Long
+    // insert
+    suspend fun addNewAccount(accountId: UUID, chatId: Long?): AccountInfo
+    suspend fun addNewStatistics(accountId: UUID): Statistics
+    suspend fun addAppFeedback(fromAccountId: UUID, text: String): AppFeedback
+    // get
+    suspend fun getAccountInfo(accountId: UUID): AccountInfo?
+    suspend fun getAllAccountInfo(): CoroutineFindPublisher<AccountInfo>
+    // set
+    suspend fun setAccountState(accountId: UUID, to: UserState)
+    suspend fun setName(accountId: UUID, to: String)
+    suspend fun setSurname(accountId: UUID, to: String)
+    suspend fun setPhoto(accountId: UUID, to: String)
+    suspend fun setAbout(accountId: UUID, to: String)
 }

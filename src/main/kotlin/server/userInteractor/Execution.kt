@@ -7,6 +7,7 @@ import db.MongoDbConnector
 import server.KeyboardCreator
 import server.userInteractor.Execution.JustChangeStateCommandExecution
 import server.userInteractor.Execution.NonStateChangeCommandExecution
+import server.userInteractor.Execution.StateChangeCommandExecution
 import server.userInteractor.Execution.WithOnExecuteLogic
 import server.userInteractor.Execution.WithPreExecuteLogic
 import server.userInteractor.Execution.TextExecution
@@ -20,6 +21,7 @@ import server.userInteractor.UserCommand.FIND
 import server.userInteractor.UserCommand.LEAVE_FEEDBACK
 import server.userInteractor.UserCommand.NAME
 import server.userInteractor.UserCommand.OK
+import server.userInteractor.UserCommand.REFUSE
 import server.userInteractor.UserCommand.START
 import server.userInteractor.UserCommand.SURNAME
 import server.userInteractor.UserState.ASKING_TO_RATE
@@ -62,7 +64,7 @@ sealed class Execution {
         WithOnExecuteLogic, Execution() {
         private suspend fun changeState(env: MessageHandlerEnvironment, toState: UserState) {
             assert(this::accountInfo.isInitialized) { "obtainAccountInfo must be called before changing state." }
-            MongoDbConnector.changeAccountState(accountInfo.id, toState)
+            MongoDbConnector.setAccountState(accountInfo.accountInfoId!!, toState)
             val keyboardReplyMarkup = KeyboardCreator.createKeyboard(toState)
             val result = env.bot.sendMessage(
                 text = keyboardCommentText,
@@ -138,7 +140,7 @@ sealed class Execution {
 object StartExecution : JustChangeStateCommandExecution(START, "Okay, let's start!", MAIN_MENU)
 class BackExecution(toState: UserState) : JustChangeStateCommandExecution(BACK, "Back.", toState)
 class OkExecution(toState: UserState) : JustChangeStateCommandExecution(OK, "Ok.", toState)
-//class NoExecution(toState: UserState) : JustChangeStateCommandExecution(OK, "Ok.", toState)
+class NoExecution(toState: UserState) : JustChangeStateCommandExecution(OK, "No.", toState)
 
 object HelpExecution : WithOnExecuteLogic, NonStateChangeCommandExecution(UserCommand.HELP) {
     private const val HELP_MESSAGE = "There is how this application works:\n" +
@@ -165,9 +167,8 @@ object LeaveFeedbackTextExecution : WithPreExecuteLogic, TextExecution("Thank yo
     }
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.addAppFeedback(accountInfo.id, text)
+        MongoDbConnector.addAppFeedback(accountInfo.accountInfoId!!, text)
     }
-
 }
 
 object FillAccountInfoExecution :
@@ -195,7 +196,7 @@ object FillNameTextExecution : WithPreExecuteLogic, TextExecution("Name is chang
     const val NAME_MAX_LENGTH = 13;
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.changeName(accountInfo.id, text)
+        MongoDbConnector.setName(accountInfo.accountInfoId!!, text)
     }
 
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
@@ -211,7 +212,7 @@ object FillSurnameNameTextExecution : WithPreExecuteLogic,
     const val SURNAME_MAX_LENGTH = 13;
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.changeSurname(accountInfo.id, text)
+        MongoDbConnector.setSurname(accountInfo.accountInfoId!!, text)
     }
 
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
@@ -226,7 +227,7 @@ object FillAboutTextExecution : WithPreExecuteLogic, TextExecution("About is cha
     const val ABOUT_MAX_LENGTH = 150;
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.changeAbout(accountInfo.id, text)
+        MongoDbConnector.setAbout(accountInfo.accountInfoId!!, text)
     }
 
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
@@ -268,4 +269,31 @@ object RatingMatchTextExecution : WithPreExecuteLogic, TextExecution("Your rate 
     override suspend fun handleTextInner(text: String) {
         TODO("Not yet implemented")
     }
+}
+object RefuseToRateExecution : WithOnExecuteLogic, StateChangeCommandExecution(REFUSE, "Okay, you get unreliable badge.", STARTED) {
+    override suspend fun doInnerInnerJob(env: MessageHandlerEnvironment) {
+        TODO("Not yet implemented")
+    }
+}
+
+fun matchApplicationLogic() {
+    val accountInfoCreatedApplication = AccountInfo.MOCK_ACCOUNT
+    val accountInfoAcceptedApplication = AccountInfo.MOCK_ACCOUNT
+    // Unaccept all applications that has time conflicts with this.
+    // Redirect
+
+    // Some requests should block db?
+    // For example when two users accept one application.
+
+    /**
+     * Case: user created application. Other user accepted it.
+     * First user starts exploring account, but acception is deleted.
+     * If he chooses:
+     *  - To accept it -> redirect to the list of reviewing applications,
+     *  delete this application and say that it was deleted.
+     *  - To back or reject -> redirect to the list and just delete this application.
+     *
+     *  The same situation when trying to accept application that does not exist any more.
+     */
+
 }

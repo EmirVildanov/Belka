@@ -57,6 +57,7 @@ BlaBlaCar, for example).
 * **KotlinTelegramBot** for telegram bot frontend
 * **[VkJavaSDK](https://github.com/VKCOM/vk-java-sdk)** for Vk bot frontend **TBD**
 * **MongoDb** for storing data
+  * Creates collections automatically when first requested
 * **Redis** for caching:
     * Network calls (such as requests to Yandex Rasp API)
     * MongoDb calls

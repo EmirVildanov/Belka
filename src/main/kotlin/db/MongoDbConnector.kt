@@ -1,29 +1,29 @@
 package db
 
-import com.github.kotlintelegrambot.dispatcher.handlers.MessageHandlerEnvironment
-import kotlinx.coroutines.runBlocking
+import java.util.UUID
 import model.AccountInfo
 import model.AppFeedback
 import model.Statistics
 import model.UserReview
-import model.generateCredentials
-import server.userInteractor.UserState
 import org.bson.BsonInvalidOperationException
-import org.joda.time.DateTime
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
+import org.litote.kmongo.coroutine.CoroutineFindPublisher
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.eq
 import org.litote.kmongo.gte
 import org.litote.kmongo.reactivestreams.KMongo
 import org.litote.kmongo.setValue
-import server.userInteractor.getChatId
+import org.litote.kmongo.size
+import server.userInteractor.UserState
 
 object MongoDbConnector : DbInterface {
     private const val BELKA_DB_NAME = "belka"
     private const val ACCOUNT_COLLECTION_NAME = "accountinfo"
     private const val STATISTICS_COLLECTION_NAME = "statistics"
+    private const val REVIEW_COLLECTION_NAME = "review"
+    private const val APP_FEEDBACK_COLLECTION_NAME = "appfeedback"
 
     private lateinit var client: CoroutineClient
     private lateinit var db: CoroutineDatabase
@@ -35,36 +35,46 @@ object MongoDbConnector : DbInterface {
     fun init() {
         client = KMongo.createClient().coroutine
         db = client.getDatabase(BELKA_DB_NAME)
-//        runBlocking {
-//            val collections = db.listCollectionNames()
-//            if (!collections.contains(ACCOUNT_COLLECTION_NAME)) {
-//                db.createCollection(ACCOUNT_COLLECTION_NAME)
-//            }
-//            if (!collections.contains(STATISTICS_COLLECTION_NAME)) {
-//                db.createCollection(STATISTICS_COLLECTION_NAME)
-//            }
-//        }
         accountInfoCollection = db.getCollection()
         statisticsCollection = db.getCollection()
         reviewCollection = db.getCollection()
         appFeedbackCollection = db.getCollection()
     }
 
-    override suspend fun createNewAccount(env: MessageHandlerEnvironment): AccountInfo {
-        val chatId = env.getChatId().id
-        val accountInfo = AccountInfo(
-            id = chatId,
-            createdAt = DateTime.now(),
-            statistics = createNewStatistics(chatId),
-            credentials = generateCredentials()
+    suspend fun test() {
+//        accountInfoCollection.insertOne(AccountInfo.MOCK_ACCOUNT)
+        val res =
+            accountInfoCollection.updateOne(AccountInfo::accountInfoId eq "UUIDString", setValue(AccountInfo::surname, "ABBA"))
+        println(res)
+    }
+
+    // insert
+    override suspend fun addNewAccount(chatId: Long?): AccountInfo {
+        val newStatistics = addNewStatistics()
+        val accountInfo = AccountInfo.createNewAccount(
+            chatId = chatId,
+            statisticsId = addNewStatistics(accountId).statisticsId,
         )
         accountInfoCollection.insertOne(accountInfo)
         return accountInfo
     }
 
-    override suspend fun getAccountInfo(id: Long): AccountInfo? {
+    override suspend fun addNewStatistics(accountId: UUID): Statistics {
+        val newStatistics = Statistics.createNewStatistics(accountId)
+        statisticsCollection.insertOne(newStatistics)
+        return newStatistics
+    }
+
+    override suspend fun addAppFeedback(fromAccountId: UUID, feedback: String): AppFeedback {
+        val newFeedback = AppFeedback.createNewAppFeedBack(fromAccountId, feedback)
+        appFeedbackCollection.insertOne(newFeedback)
+        return newFeedback
+    }
+
+    // get
+    override suspend fun getAccountInfo(accountId: UUID): AccountInfo? {
         try {
-            return accountInfoCollection.findOne(AccountInfo::id eq id)
+            return accountInfoCollection.findOne(AccountInfo::accountInfoId eq accountId)
         } catch (e: BsonInvalidOperationException) {
             throw BadDbRequestException("Problem with matching account schema in db and in request.\n$e")
         } catch (e: IllegalArgumentException) {
@@ -72,44 +82,34 @@ object MongoDbConnector : DbInterface {
         }
     }
 
-    override suspend fun changeAccountState(id: Long, to: UserState) {
-        accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(AccountInfo::state, to))
+    override suspend fun getAllAccountInfo(): CoroutineFindPublisher<AccountInfo> {
+        return accountInfoCollection.find(AccountInfo::chatId gte 0)
     }
-
-    // Don't know if we can use it properly
+    // set
+//    Don't know if we can use it properly
 //    suspend fun <T> updateAccountInfoField(id: Long, property: KProperty<T>, value: T) {
 //        accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(property, value))
 //    }
-
-    override suspend fun changeName(id: Long, to: String) {
-        accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(AccountInfo::name, to))
+    override suspend fun setAccountState(accountId: UUID, to: UserState) {
+        accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::state, to))
     }
 
-    override suspend fun changeSurname(id: Long, to: String) {
-        accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(AccountInfo::surname, to))
+    override suspend fun setName(accountId: UUID, to: String) {
+        accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::name, to))
     }
 
-    override suspend fun changeAbout(id: Long, to: String) {
-        accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(AccountInfo::about, to))
+    override suspend fun setSurname(accountId: UUID, to: String) {
+        accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::surname, to))
     }
 
-    override suspend fun changePhoto(id: Long, to: String) {
-        accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(AccountInfo::photo, to))
+    override suspend fun setAbout(accountId: UUID, to: String) {
+        accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::about, to))
     }
 
-    override suspend fun createNewStatistics(userId: Long): Long {
-        val newId = statisticsCollection.countDocuments(Statistics::id gte 1) + 1
-        val newStatistics = Statistics(newId, userId, 0)
-        statisticsCollection.insertOne(newStatistics)
-        return newId
+    override suspend fun setPhoto(accountId: UUID, to: String) {
+        accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::photoFileId, to))
     }
 
-    override suspend fun addAppFeedback(fromId: Long, text: String) : Long {
-        val newId = appFeedbackCollection.countDocuments(AppFeedback::id gte 1) + 1
-        val newFeedback = AppFeedback(fromId, newId, text)
-        appFeedbackCollection.insertOne(newFeedback)
-        return newId
-    }
 
     fun stop() {
         client.close()

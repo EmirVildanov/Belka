@@ -10,6 +10,7 @@ import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.LocalDate
 import org.joda.time.format.ISODateTimeFormat
+import server.rides.RideInfo.RideInfoSegment
 
 object TimeWorker {
     private val zoneMoscow = DateTimeZone.forID("Europe/Moscow")
@@ -23,19 +24,19 @@ object TimeWorker {
         return rideTimeFormatter.print(date)
     }
 
-    fun isRideYetAvailable(rideInfo: RideInfo): Boolean {
+    fun isRideYetAvailable(rideInfo: RideInfoSegment): Boolean {
         return DateTime(rideInfo.departure, zoneMoscow).toLocalTime() > getCurrentTime()
     }
-}
 
-object DateTimeSerializer : KSerializer<DateTime> {
-    override val descriptor = PrimitiveSerialDescriptor("DateTime", PrimitiveKind.STRING)
+    object DateTimeSerializer : KSerializer<DateTime> {
+        override val descriptor = PrimitiveSerialDescriptor("DateTime", PrimitiveKind.STRING)
 
-    override fun deserialize(decoder: Decoder): DateTime {
-        return DateTime(decoder.decodeString())
-    }
+        override fun deserialize(decoder: Decoder): DateTime {
+            return DateTime(decoder.decodeString())
+        }
 
-    override fun serialize(encoder: Encoder, value: DateTime) {
-        encoder.encodeString(value.toString())
+        override fun serialize(encoder: Encoder, value: DateTime) {
+            encoder.encodeString(value.toString())
+        }
     }
 }

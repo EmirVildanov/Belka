@@ -10,6 +10,7 @@ enum class UserCommand(val commandName: String) {
         ABOUT("about"),
     FIND("find"),
     LOAD_PHOTO("load_photo"),
+    REFUSE("refuse"),
     BACK("back"),
     NO("no"),
     OK("ok");

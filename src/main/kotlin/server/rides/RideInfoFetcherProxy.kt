@@ -2,7 +2,7 @@ package server.rides
 
 import org.joda.time.LocalDate
 
-class RidesInfoFetcherProxy : RidesInfoFetcherInterface {
+class RideInfoFetcherProxy : RideInfoFetcherInterface {
     override suspend fun getDormitoryToTownRides(date: LocalDate): List<RideInfo> {
         return RideInfoFetcher.getDormitoryToTownRides(date)
     }
