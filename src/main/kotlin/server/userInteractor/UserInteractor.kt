@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import model.AccountInfo
 import db.MongoDbConnector
+import db.NoGetException
 import kotlinx.coroutines.cancel
 import server.userInteractor.Execution.ICommandExecution
 import server.userInteractor.Execution.WithOnExecuteLogic
@@ -56,9 +57,11 @@ object UserInteractor {
         val commandName = env.message.text!!.drop(1)
         try {
             val command = UserCommand.valueOf(commandName.toUpperCasePreservingASCIIRules())
-            var accountInfo = MongoDbConnector.getAccountInfo(env.getChatId().id)
-            if (accountInfo == null) {
-                accountInfo = MongoDbConnector.createNewAccount(env.getChatId().id)
+            var accountInfo: AccountInfo
+            try {
+                accountInfo = MongoDbConnector.getAccountInfo(env.getChatIdLong())
+            } catch (e: NoGetException) {
+                accountInfo = MongoDbConnector.addNewAccount(env.getChatIdLong())
             }
             val currentState = accountInfo.state
             val executionResult = getCommandExecution(currentState, command)
@@ -71,8 +74,8 @@ object UserInteractor {
     }
 
     fun handleText(env: MessageHandlerEnvironment) = scope.launch {
-        val accountInfo = MongoDbConnector.getAccountInfo(env.getChatId().id)
-        val currentState = accountInfo!!.state
+        val accountInfo = MongoDbConnector.getAccountInfo(env.getChatIdLong())
+        val currentState = accountInfo.state
         val executionResult = getTextExecution(currentState)
         handleExecutionCycle(env, accountInfo, executionResult, "Such text is not accepted in your state.")
     }
@@ -121,13 +124,14 @@ object UserInteractor {
 
     fun handlePhoto(env: MessageHandlerEnvironment) = scope.launch {
         val photo =
-            env.message.photo?.let { it[0] } ?: throw RecourcesHandlingException("Photo fot handling wasn't provided.")
-        val photoSize = photo.fileSize ?: throw RecourcesHandlingException("Can't determine photo size.")
+            env.message.photo?.let { it[0] } ?: throw ResourcesHandlingException("Photo fot handling wasn't provided.")
+        val photoSize = photo.fileSize ?: throw ResourcesHandlingException("Can't determine photo size.")
         val fileId = photo.fileId
         if (photoSize > MAX_PHOTO_SIZE_BYTES) {
             env.bot.sendMessage(env.getChatId(), "File size must be less than 20Mb.")
         }
-        MongoDbConnector.setPhoto(env.getChatId().id, fileId)
+        val accountInfo = MongoDbConnector.getAccountInfo(env.getChatIdLong())
+        MongoDbConnector.setAccountInfoPhoto(accountInfo.accountInfoId, fileId)
     }
 
     fun stop() {
@@ -135,5 +139,5 @@ object UserInteractor {
     }
 }
 
-class RecourcesHandlingException(override val message: String?) : Exception()
-class WrongStateException(override val message: String?) : Exception()
+class ResourcesHandlingException(override val message: String?) : Exception(message)
+class WrongStateException(override val message: String?) : Exception(message)

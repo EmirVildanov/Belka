@@ -1,20 +1,32 @@
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import server.rides.StationInfo
+import model.Application
+import model.RideInfo
+import model.enum.TransportType.SUBURBAN
 import org.joda.time.DateTime
+import server.TimeWorker
+import utils.Utils.generateNewUUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class TimeWorkerTest {
 
+    /**
+     * Don't use bare DateTime, because serializer for him won't be found
+     */
     @Test
-    fun testSerialization() {
-        val dateTime = DateTime.now()
-        val rideExpected = SucceededRide(1, dateTime, StationInfo("A"), StationInfo("B"), listOf(1, 2))
-        val json = Json.encodeToString(rideExpected)
-        val rideActual = Json.decodeFromString<SucceededRide>(json)
-        println(rideActual.dateTime == dateTime)
-        assertEquals(rideExpected, rideActual)
+    fun testDateTimeSerialization() {
+        val departureExpected = TimeWorker.now(TimeWorker.ZONE_MOSCOW)
+        val applicationExpected =
+            Application.createNewApplication(
+                generateNewUUID(), "Comment", RideInfo(
+                    "A", "B", departureExpected, SUBURBAN
+                )
+            )
+        val json = Json.encodeToString(applicationExpected)
+        val applicationActual = Json.decodeFromString<Application>(json)
+        val departureActual = applicationActual.rideInfo.departureAt
+        assertEquals(departureExpected, departureActual)
     }
 }

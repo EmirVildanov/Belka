@@ -1,11 +1,13 @@
 package db
 
-import java.util.UUID
+import com.mongodb.MongoClientSettings
+import java.util.*
 import model.AccountInfo
 import model.AppFeedback
 import model.Statistics
 import model.UserReview
 import org.bson.BsonInvalidOperationException
+import org.bson.UuidRepresentation
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.CoroutineDatabase
@@ -15,7 +17,6 @@ import org.litote.kmongo.eq
 import org.litote.kmongo.gte
 import org.litote.kmongo.reactivestreams.KMongo
 import org.litote.kmongo.setValue
-import org.litote.kmongo.size
 import server.userInteractor.UserState
 
 object MongoDbConnector : DbInterface {
@@ -33,7 +34,8 @@ object MongoDbConnector : DbInterface {
     private lateinit var appFeedbackCollection: CoroutineCollection<AppFeedback>
 
     fun init() {
-        client = KMongo.createClient().coroutine
+        val clientSettings = MongoClientSettings.builder().uuidRepresentation(UuidRepresentation.STANDARD).build()
+        client = KMongo.createClient(clientSettings).coroutine
         db = client.getDatabase(BELKA_DB_NAME)
         accountInfoCollection = db.getCollection()
         statisticsCollection = db.getCollection()
@@ -42,18 +44,23 @@ object MongoDbConnector : DbInterface {
     }
 
     suspend fun test() {
-//        accountInfoCollection.insertOne(AccountInfo.MOCK_ACCOUNT)
-        val res =
-            accountInfoCollection.updateOne(AccountInfo::accountInfoId eq "UUIDString", setValue(AccountInfo::surname, "ABBA"))
-        println(res)
+        accountInfoCollection.insertOne(
+            AccountInfo.createNewAccount(
+                1
+            )
+        )
+//        val res =
+//            accountInfoCollection.updateOne(
+//                AccountInfo::accountInfoId eq UUID.fromString(""),
+//                setValue(AccountInfo::surname, "ABBA")
+//            )
+//        println(res)
     }
 
     // insert
     override suspend fun addNewAccount(chatId: Long?): AccountInfo {
-        val newStatistics = addNewStatistics()
         val accountInfo = AccountInfo.createNewAccount(
             chatId = chatId,
-            statisticsId = addNewStatistics(accountId).statisticsId,
         )
         accountInfoCollection.insertOne(accountInfo)
         return accountInfo
@@ -72,9 +79,21 @@ object MongoDbConnector : DbInterface {
     }
 
     // get
-    override suspend fun getAccountInfo(accountId: UUID): AccountInfo? {
+    override suspend fun getAccountInfo(accountId: UUID): AccountInfo {
         try {
             return accountInfoCollection.findOne(AccountInfo::accountInfoId eq accountId)
+                ?: throw NoGetException("Didn't find account.")
+        } catch (e: BsonInvalidOperationException) {
+            throw BadDbRequestException("Problem with matching account schema in db and in request.\n$e")
+        } catch (e: IllegalArgumentException) {
+            throw BadDbRequestException("Probably trying to get an entry with missing field.\n$e")
+        }
+    }
+
+    override suspend fun getAccountInfo(chatId: Long?): AccountInfo {
+        try {
+            return accountInfoCollection.findOne(AccountInfo::chatId eq chatId)
+                ?: throw NoGetException("Didn't find account.")
         } catch (e: BsonInvalidOperationException) {
             throw BadDbRequestException("Problem with matching account schema in db and in request.\n$e")
         } catch (e: IllegalArgumentException) {
@@ -85,35 +104,37 @@ object MongoDbConnector : DbInterface {
     override suspend fun getAllAccountInfo(): CoroutineFindPublisher<AccountInfo> {
         return accountInfoCollection.find(AccountInfo::chatId gte 0)
     }
+
     // set
-//    Don't know if we can use it properly
-//    suspend fun <T> updateAccountInfoField(id: Long, property: KProperty<T>, value: T) {
-//        accountInfoCollection.updateOne(AccountInfo::id eq id, setValue(property, value))
-//    }
-    override suspend fun setAccountState(accountId: UUID, to: UserState) {
-        accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::state, to))
+    override suspend fun setAccountInfoState(accountId: UUID, to: UserState) {
+        val result =
+            accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::state, to))
+        if (result.matchedCount == 0L) {
+            throw NoSetException("Could not set new state as didn't find account.")
+        }
     }
 
-    override suspend fun setName(accountId: UUID, to: String) {
+    override suspend fun setAccountInfoName(accountId: UUID, to: String) {
         accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::name, to))
     }
 
-    override suspend fun setSurname(accountId: UUID, to: String) {
+    override suspend fun setAccountInfoSurname(accountId: UUID, to: String) {
         accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::surname, to))
     }
 
-    override suspend fun setAbout(accountId: UUID, to: String) {
+    override suspend fun setAccountInfoAbout(accountId: UUID, to: String) {
         accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::about, to))
     }
 
-    override suspend fun setPhoto(accountId: UUID, to: String) {
+    override suspend fun setAccountInfoPhoto(accountId: UUID, to: String) {
         accountInfoCollection.updateOne(AccountInfo::accountInfoId eq accountId, setValue(AccountInfo::photoFileId, to))
     }
-
 
     fun stop() {
         client.close()
     }
 }
 
-class BadDbRequestException(override val message: String) : Exception()
+class BadDbRequestException(override val message: String) : Exception(message)
+class NoGetException(override val message: String) : Exception(message)
+class NoSetException(override val message: String) : Exception(message)

@@ -10,6 +10,10 @@ fun MessageHandlerEnvironment.getChatId(): ChatId.Id {
     return ChatId.fromId(this.message.chat.id)
 }
 
+fun MessageHandlerEnvironment.getChatIdLong(): Long {
+    return this.message.chat.id
+}
+
 fun MessageHandlerEnvironment.sendPhoto(fileId: String) {
     this.bot.sendPhoto(this.getChatId(), TelegramFile.ByFileId(fileId))
 }

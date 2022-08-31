@@ -32,6 +32,7 @@ import server.userInteractor.UserState.FILLING_SURNAME
 import server.userInteractor.UserState.MAIN_MENU
 import server.userInteractor.UserState.STARTED
 import server.userInteractor.UserState.WRITING_APP_FEEDBACK
+import utils.CustomLogger
 
 /**
  * Class that represents action, called when user chose some variant from keyboard.
@@ -64,7 +65,8 @@ sealed class Execution {
         WithOnExecuteLogic, Execution() {
         private suspend fun changeState(env: MessageHandlerEnvironment, toState: UserState) {
             assert(this::accountInfo.isInitialized) { "obtainAccountInfo must be called before changing state." }
-            MongoDbConnector.setAccountState(accountInfo.accountInfoId!!, toState)
+            CustomLogger.logInfoMessage("Current UUID: ${accountInfo.accountInfoId}")
+            MongoDbConnector.setAccountInfoState(accountInfo.accountInfoId, toState)
             val keyboardReplyMarkup = KeyboardCreator.createKeyboard(toState)
             val result = env.bot.sendMessage(
                 text = keyboardCommentText,
@@ -196,7 +198,7 @@ object FillNameTextExecution : WithPreExecuteLogic, TextExecution("Name is chang
     const val NAME_MAX_LENGTH = 13;
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.setName(accountInfo.accountInfoId!!, text)
+        MongoDbConnector.setAccountInfoName(accountInfo.accountInfoId!!, text)
     }
 
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
@@ -212,7 +214,7 @@ object FillSurnameNameTextExecution : WithPreExecuteLogic,
     const val SURNAME_MAX_LENGTH = 13;
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.setSurname(accountInfo.accountInfoId!!, text)
+        MongoDbConnector.setAccountInfoSurname(accountInfo.accountInfoId!!, text)
     }
 
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
@@ -227,7 +229,7 @@ object FillAboutTextExecution : WithPreExecuteLogic, TextExecution("About is cha
     const val ABOUT_MAX_LENGTH = 150;
 
     override suspend fun handleTextInner(text: String) {
-        MongoDbConnector.setAbout(accountInfo.accountInfoId!!, text)
+        MongoDbConnector.setAccountInfoAbout(accountInfo.accountInfoId!!, text)
     }
 
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
@@ -276,9 +278,9 @@ object RefuseToRateExecution : WithOnExecuteLogic, StateChangeCommandExecution(R
     }
 }
 
-fun matchApplicationLogic() {
-    val accountInfoCreatedApplication = AccountInfo.MOCK_ACCOUNT
-    val accountInfoAcceptedApplication = AccountInfo.MOCK_ACCOUNT
+suspend fun matchApplicationLogic() {
+    val accountInfoCreatedApplication = AccountInfo.createNewAccount(1L)
+    val accountInfoAcceptedApplication = AccountInfo.createNewAccount(2L)
     // Unaccept all applications that has time conflicts with this.
     // Redirect
 
