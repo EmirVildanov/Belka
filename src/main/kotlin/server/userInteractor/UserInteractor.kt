@@ -74,7 +74,12 @@ object UserInteractor {
     }
 
     fun handleText(env: MessageHandlerEnvironment) = scope.launch {
-        val accountInfo = MongoDbConnector.getAccountInfo(env.getChatIdLong())
+        var accountInfo: AccountInfo
+        try {
+            accountInfo = MongoDbConnector.getAccountInfo(env.getChatIdLong())
+        } catch (e: NoGetException) {
+            accountInfo = MongoDbConnector.addNewAccount(env.getChatIdLong())
+        }
         val currentState = accountInfo.state
         val executionResult = getTextExecution(currentState)
         handleExecutionCycle(env, accountInfo, executionResult, "Such text is not accepted in your state.")

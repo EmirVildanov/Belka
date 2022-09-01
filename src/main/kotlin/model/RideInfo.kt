@@ -3,7 +3,7 @@ package model
 import kotlinx.serialization.Serializable
 import model.enum.TransportType
 import org.joda.time.DateTime
-import server.TimeWorker.DateTimeSerializer
+import utils.DateTimeSerializer
 
 @Serializable
 data class RideInfo(

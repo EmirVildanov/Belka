@@ -2,34 +2,29 @@ package model
 
 import db.MongoDbConnector
 import java.util.*
-import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import server.userInteractor.UserState
 import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
 import server.TimeWorker
-import server.TimeWorker.DateTimeSerializer
+import server.userInteractor.UserState
 import server.userInteractor.UserState.NOT_STARTED
+import utils.DateTimeSerializer
 import utils.Utils.generateNewUUID
 
 // As soon as user must fill such fields as name and surname, by default these fields are null
 @Serializable
 data class AccountInfo(
     @SerialName("_id")
-    @Serializable(with = UUIDSerializer::class)
+    @Contextual
     val accountInfoId: UUID,  // id and chatId are separated in case application will live beyond telegram
     val chatId: Long?,  // telegram chatId
     @Serializable(with = DateTimeSerializer::class)
     val createdAt: DateTime,
-    @Serializable(with = UUIDSerializer::class)
+    @Contextual
     val statisticsId: UUID,
-    val ratingIds: List<@Serializable(with = UUIDSerializer::class) UUID>,
-    val applicationIds: List<@Serializable(with = UUIDSerializer::class) UUID>,
+    val ratingIds: List<@Contextual UUID>,
+    val applicationIds: List<@Contextual UUID>,
     val credentials: String, // Needed for authorization beyond Telegram
     val state: UserState,
     val name: String?,
@@ -67,18 +62,6 @@ data class AccountInfo(
                 .map { kotlin.random.Random.nextInt(0, charPool.size) }
                 .map(charPool::get)
                 .joinToString("");
-        }
-    }
-
-    object UUIDSerializer : KSerializer<UUID> {
-        override val descriptor = PrimitiveSerialDescriptor("UUID", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): UUID {
-            return UUID.fromString(decoder.decodeString())
-        }
-
-        override fun serialize(encoder: Encoder, value: UUID) {
-            encoder.encodeString(value.toString())
         }
     }
 }

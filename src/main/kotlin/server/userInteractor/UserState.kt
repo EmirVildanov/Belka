@@ -34,8 +34,7 @@ enum class UserState {
             FILLING_NAME -> listOf(FillNameTextExecution, BackExecution(FILLING_ACCOUNT_INFO))
             FILLING_SURNAME -> listOf(FillSurnameNameTextExecution, BackExecution(FILLING_ACCOUNT_INFO))
             FILLING_ABOUT -> listOf(FillAboutTextExecution, BackExecution(FILLING_ACCOUNT_INFO))
-            STARTED -> listOf(BackExecution(MAIN_MENU))
-
+            STARTED -> listOf(BackExecution(MAIN_MENU), CreateExecution)
             ASKING_TO_RATE -> listOf(RatingMatchTextExecution)
             else -> listOf()
         }

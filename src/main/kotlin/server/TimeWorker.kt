@@ -31,16 +31,4 @@ object TimeWorker {
         val zone = ZONE_MOSCOW
         return DateTime(dateTime, zone) > now(zone)
     }
-
-    object DateTimeSerializer : KSerializer<DateTime> {
-        override val descriptor = PrimitiveSerialDescriptor("DateTime", PrimitiveKind.STRING)
-
-        override fun deserialize(decoder: Decoder): DateTime {
-            return DateTime(decoder.decodeString())
-        }
-
-        override fun serialize(encoder: Encoder, value: DateTime) {
-            encoder.encodeString(value.toString())
-        }
-    }
 }

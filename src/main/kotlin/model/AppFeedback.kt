@@ -1,17 +1,17 @@
 package model
 
 import java.util.UUID
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import model.AccountInfo.UUIDSerializer
 import utils.Utils.generateNewUUID
 
 @Serializable
 data class AppFeedback(
     @SerialName("_id")
-    @Serializable(with = UUIDSerializer::class)
+    @Contextual
     val appFeedbackId: UUID,
-    @Serializable(with = UUIDSerializer::class)
+    @Contextual
     val fromAccountId: UUID,
     val feedback: String
 ) {

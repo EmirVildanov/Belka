@@ -1,19 +1,17 @@
 package model
 
-import java.util.UUID
+import java.util.*
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import model.AccountInfo.UUIDSerializer
-import org.joda.time.DateTime
-import server.userInteractor.UserState.NOT_STARTED
 import utils.Utils.generateNewUUID
 
 @Serializable
 data class Statistics(
     @SerialName("_id")
-    @Serializable(with = UUIDSerializer::class)
+    @Contextual
     val statisticsId: UUID,
-    @Serializable(with = UUIDSerializer::class)
+    @Contextual
     val accountId: UUID,
     val ridesSucceededNumber: Int
 ) {

@@ -34,6 +34,7 @@ object MongoDbConnector : DbInterface {
     private lateinit var appFeedbackCollection: CoroutineCollection<AppFeedback>
 
     fun init() {
+        /** Need this for MongoDbFormatter can encode and decode UUID. */
         val clientSettings = MongoClientSettings.builder().uuidRepresentation(UuidRepresentation.STANDARD).build()
         client = KMongo.createClient(clientSettings).coroutine
         db = client.getDatabase(BELKA_DB_NAME)

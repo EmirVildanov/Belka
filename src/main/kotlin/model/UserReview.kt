@@ -1,19 +1,19 @@
 package model
 
 import java.util.UUID
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import model.AccountInfo.UUIDSerializer
 import utils.Utils.generateNewUUID
 
 @Serializable
 data class UserReview(
     @SerialName("_id")
-    @Serializable(with = UUIDSerializer::class)
+    @Contextual
     val userReviewId: UUID,
-    @Serializable(with = UUIDSerializer::class)
+    @Contextual
     val fromAccountId: UUID,
-    @Serializable(with = UUIDSerializer::class)
+    @Contextual
     val toAccountId: UUID,
     val feedback: String
 ) {

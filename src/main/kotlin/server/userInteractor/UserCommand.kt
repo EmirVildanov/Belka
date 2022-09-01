@@ -8,9 +8,12 @@ enum class UserCommand(val commandName: String) {
         NAME("name"),
         SURNAME("surname"),
         ABOUT("about"),
+        LOAD_PHOTO("load_photo"),
     FIND("find"),
-    LOAD_PHOTO("load_photo"),
+    CREATE("create"),
+
     REFUSE("refuse"),
+
     BACK("back"),
     NO("no"),
     OK("ok");
