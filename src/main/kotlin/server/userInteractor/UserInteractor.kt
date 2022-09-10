@@ -1,22 +1,21 @@
 package server.userInteractor
 
-import com.github.kotlintelegrambot.dispatcher.handlers.MessageHandlerEnvironment
-import com.github.kotlintelegrambot.entities.ChatId
+import db.MongoDbConnector
+import db.NoGetException
 import io.ktor.util.toUpperCasePreservingASCIIRules
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import model.AccountInfo
-import db.MongoDbConnector
-import db.NoGetException
-import kotlinx.coroutines.cancel
+import server.MessageHandlerEnvironmentWrapper
 import server.userInteractor.Execution.ICommandExecution
-import server.userInteractor.Execution.WithOnExecuteLogic
-import server.userInteractor.Execution.WithPreExecuteLogic
 import server.userInteractor.Execution.PreExecuteResult
 import server.userInteractor.Execution.TextExecution
+import server.userInteractor.Execution.WithOnExecuteLogic
+import server.userInteractor.Execution.WithPreExecuteLogic
 import server.userInteractor.UserInteractor.ExecutionSearchResult.NotFound
 import server.userInteractor.UserInteractor.ExecutionSearchResult.Ok
 import utils.CustomLogger
@@ -53,32 +52,31 @@ object UserInteractor {
         return Ok(allowedExecutions.first())
     }
 
-    fun handleCommand(env: MessageHandlerEnvironment) = scope.launch {
-        val commandName = env.message.text!!.drop(1)
+    fun handleCommand(env: MessageHandlerEnvironmentWrapper) = scope.launch {
+        val accountInfo: AccountInfo = try {
+            MongoDbConnector.getAccountInfo(env.getChatIdLong())
+        } catch (e: NoGetException) {
+            MongoDbConnector.addNewAccount(env.getChatIdLong())
+        }
+        val currentState = accountInfo.state
+
+        val commandName = env.getMessageText()!!.drop(1)
         try {
             val command = UserCommand.valueOf(commandName.toUpperCasePreservingASCIIRules())
-            var accountInfo: AccountInfo
-            try {
-                accountInfo = MongoDbConnector.getAccountInfo(env.getChatIdLong())
-            } catch (e: NoGetException) {
-                accountInfo = MongoDbConnector.addNewAccount(env.getChatIdLong())
-            }
-            val currentState = accountInfo.state
             val executionResult = getCommandExecution(currentState, command)
             handleExecutionCycle(env, accountInfo, executionResult, "Such command is not accepted in your state.")
         } catch (e: IllegalArgumentException) {
             // thrown when trying to obtain valueOf UserCommand enum
             CustomLogger.logInfoMessage("User ${env.getUsername()} sent wrong command.")
-            env.sendMessage("You sent a wrong command.")
+            env.sendMessage(currentState, "You sent a wrong command.")
         }
     }
 
-    fun handleText(env: MessageHandlerEnvironment) = scope.launch {
-        var accountInfo: AccountInfo
-        try {
-            accountInfo = MongoDbConnector.getAccountInfo(env.getChatIdLong())
+    fun handleText(env: MessageHandlerEnvironmentWrapper) = scope.launch {
+        val accountInfo: AccountInfo = try {
+            MongoDbConnector.getAccountInfo(env.getChatIdLong())
         } catch (e: NoGetException) {
-            accountInfo = MongoDbConnector.addNewAccount(env.getChatIdLong())
+            MongoDbConnector.addNewAccount(env.getChatIdLong())
         }
         val currentState = accountInfo.state
         val executionResult = getTextExecution(currentState)
@@ -86,22 +84,23 @@ object UserInteractor {
     }
 
     private suspend fun handleExecutionCycle(
-        env: MessageHandlerEnvironment,
+        env: MessageHandlerEnvironmentWrapper,
         accountInfo: AccountInfo,
         executionResult: ExecutionSearchResult,
         searchNotFoundMessage: String
     ) {
+        val state = accountInfo.state
         if (executionResult is NotFound) {
-            env.sendMessage(searchNotFoundMessage)
+            env.sendMessage(state, searchNotFoundMessage)
         } else {
             val execution = (executionResult as Ok).execution
             execution.obtainAccountInfo(accountInfo)
             if (execution is TextExecution) {
-                val text = env.message.text
+                val text = env.getMessageText()
                 if (text.isNullOrBlank()) {
-                    env.bot.sendMessage(
-                        env.getChatId(),
-                        text = "You sent me empty message. I don't understand it."
+                    env.sendMessage(
+                        state,
+                        "You sent me empty message. I don't understand it."
                     )
                     return
                 }
@@ -110,7 +109,7 @@ object UserInteractor {
             if (execution is WithPreExecuteLogic) {
                 val preExecuteCheckResult = execution.preExecuteCheck(env)
                 if (preExecuteCheckResult is PreExecuteResult.Error) {
-                    env.sendMessage(preExecuteCheckResult.message)
+                    env.sendMessage(state, preExecuteCheckResult.message)
                     return
                 }
             }
@@ -120,22 +119,22 @@ object UserInteractor {
         }
     }
 
-    fun handleDocument(env: MessageHandlerEnvironment) = scope.launch {
-        env.bot.sendMessage(
-            chatId = ChatId.fromId(env.message.chat.id),
-            text = "Please send me photo not as a document (without compression)."
+    fun handleDocument(env: MessageHandlerEnvironmentWrapper) = scope.launch {
+        val accountInfo = MongoDbConnector.getAccountInfo(env.getChatIdLong())
+        env.sendMessage(
+            accountInfo.state,
+            "Please send me photo not as a document (without compression)."
         )
     }
 
-    fun handlePhoto(env: MessageHandlerEnvironment) = scope.launch {
-        val photo =
-            env.message.photo?.let { it[0] } ?: throw ResourcesHandlingException("Photo fot handling wasn't provided.")
+    fun handlePhoto(env: MessageHandlerEnvironmentWrapper) = scope.launch {
+        val photo = env.getMessagePhoto()?.let { it[0] } ?: throw ResourcesHandlingException("Photo fot handling wasn't provided.")
         val photoSize = photo.fileSize ?: throw ResourcesHandlingException("Can't determine photo size.")
         val fileId = photo.fileId
-        if (photoSize > MAX_PHOTO_SIZE_BYTES) {
-            env.bot.sendMessage(env.getChatId(), "File size must be less than 20Mb.")
-        }
         val accountInfo = MongoDbConnector.getAccountInfo(env.getChatIdLong())
+        if (photoSize > MAX_PHOTO_SIZE_BYTES) {
+            env.sendMessage(accountInfo.state, "File size must be less than 20Mb.")
+        }
         MongoDbConnector.setAccountInfoPhoto(accountInfo.accountInfoId, fileId)
     }
 

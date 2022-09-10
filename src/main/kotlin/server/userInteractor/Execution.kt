@@ -1,10 +1,10 @@
 package server.userInteractor
 
-import com.github.kotlintelegrambot.dispatcher.handlers.MessageHandlerEnvironment
 import com.github.kotlintelegrambot.entities.ChatId
 import model.AccountInfo
 import db.MongoDbConnector
 import server.KeyboardCreator
+import server.MessageHandlerEnvironmentWrapper
 import server.userInteractor.Execution.JustChangeStateCommandExecution
 import server.userInteractor.Execution.NonStateChangeCommandExecution
 import server.userInteractor.Execution.StateChangeCommandExecution
@@ -53,37 +53,31 @@ sealed class Execution {
 
     /** @preExecuteCheck called before any work. */
     interface WithPreExecuteLogic {
-        suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult
+        suspend fun preExecuteCheck(env: MessageHandlerEnvironmentWrapper): PreExecuteResult
     }
 
     /** @onExecute called before changing state if it's present. */
     interface WithOnExecuteLogic {
-        suspend fun onExecute(env: MessageHandlerEnvironment)
+        suspend fun onExecute(env: MessageHandlerEnvironmentWrapper)
     }
 
     abstract class StateChangeExecution(open val keyboardCommentText: String, open val toState: UserState) :
         WithOnExecuteLogic, Execution() {
-        private suspend fun changeState(env: MessageHandlerEnvironment, toState: UserState) {
+        private suspend fun changeState(env: MessageHandlerEnvironmentWrapper, toState: UserState) {
             assert(this::accountInfo.isInitialized) { "obtainAccountInfo must be called before changing state." }
             MongoDbConnector.setAccountInfoState(accountInfo.accountInfoId, toState)
-            val keyboardReplyMarkup = KeyboardCreator.createKeyboard(toState)
-            val result = env.bot.sendMessage(
-                text = keyboardCommentText,
-                chatId = ChatId.fromId(env.message.chat.id),
-                replyMarkup = keyboardReplyMarkup
+            val result = env.sendMessage(
+                toState,
+                keyboardCommentText
             )
-            result.fold({
-            }, {
-                env.bot.sendMessage(ChatId.fromId(env.message.chat.id), text = "Something went wrong :( $it")
-            })
         }
 
-        final override suspend fun onExecute(env: MessageHandlerEnvironment) {
+        final override suspend fun onExecute(env: MessageHandlerEnvironmentWrapper) {
             doInnerInnerJob(env)
             changeState(env, toState)
         }
 
-        abstract suspend fun doInnerInnerJob(env: MessageHandlerEnvironment)
+        abstract suspend fun doInnerInnerJob(env: MessageHandlerEnvironmentWrapper)
     }
 
     interface ICommandExecution {
@@ -107,7 +101,7 @@ sealed class Execution {
         override val toState: UserState
     ) :
         ICommandExecution, StateChangeCommandExecution(command, keyboardCommentText, toState) {
-        final override suspend fun doInnerInnerJob(env: MessageHandlerEnvironment) {}
+        final override suspend fun doInnerInnerJob(env: MessageHandlerEnvironmentWrapper) {}
     }
 
     /**
@@ -124,7 +118,7 @@ sealed class Execution {
             this.text = text
         }
 
-        final override suspend fun doInnerInnerJob(env: MessageHandlerEnvironment) {
+        final override suspend fun doInnerInnerJob(env: MessageHandlerEnvironmentWrapper) {
             assert(this::text.isInitialized) { "obtainText must be called before handling text." }
             assert(this::accountInfo.isInitialized) { "obtainAccountInfo must be called before handling text." }
             handleTextInner(text)

@@ -21,10 +21,6 @@ import server.userInteractor.UserState
 
 object MongoDbConnector : DbInterface {
     private const val BELKA_DB_NAME = "belka"
-    private const val ACCOUNT_COLLECTION_NAME = "accountinfo"
-    private const val STATISTICS_COLLECTION_NAME = "statistics"
-    private const val REVIEW_COLLECTION_NAME = "review"
-    private const val APP_FEEDBACK_COLLECTION_NAME = "appfeedback"
 
     private lateinit var client: CoroutineClient
     private lateinit var db: CoroutineDatabase

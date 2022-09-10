@@ -9,11 +9,10 @@ import utils.CustomLogger
 import kotlin.system.exitProcess
 
 object Server {
-    private const val MONGODB_SERVER_START_SLEEP_TIME_MILLIS = 1000L;
-
     fun start() {
         try {
             init()
+            TelegramBotProxy.sendRecoverMessage()
             TelegramBotProxy.startPolling()
         } catch (e: IllegalArgumentException) {
             CustomLogger.logExceptionMessage("Probably couldn't open properties file", e)
@@ -23,18 +22,9 @@ object Server {
     private fun init() {
         TelegramBotProxy.init()
         RideInfoFetcher.init()
-//        startMongoDbServer()
         MongoDbConnector.init()
 //        RedisConnector.init()
         NetworkInteractor.init()
-    }
-
-    private fun startMongoDbServer() {
-        ServerStatusChecker.runMongoDb()
-        while (!ServerStatusChecker.isMongodbRunning()) {
-            Thread.sleep(MONGODB_SERVER_START_SLEEP_TIME_MILLIS)
-            continue
-        }
     }
 
     fun stop() {

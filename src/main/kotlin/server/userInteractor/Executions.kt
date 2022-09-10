@@ -1,8 +1,8 @@
 package server.userInteractor
 
-import com.github.kotlintelegrambot.dispatcher.handlers.MessageHandlerEnvironment
 import db.MongoDbConnector
 import model.AccountInfo
+import server.MessageHandlerEnvironmentWrapper
 import server.userInteractor.Execution.JustChangeStateCommandExecution
 import server.userInteractor.Execution.NonStateChangeCommandExecution
 import server.userInteractor.Execution.StateChangeCommandExecution
@@ -44,8 +44,8 @@ object HelpExecution : WithOnExecuteLogic, NonStateChangeCommandExecution(UserCo
             "2.) You may check other's application and choose them\n" +
             "Please contact @<DevAcc> if you need any help."
 
-    override suspend fun onExecute(env: MessageHandlerEnvironment) {
-        env.sendMessage(HELP_MESSAGE)
+    override suspend fun onExecute(env: MessageHandlerEnvironmentWrapper) {
+        env.sendMessage(accountInfo.state, HELP_MESSAGE)
     }
 }
 
@@ -55,7 +55,7 @@ object LeaveFeedbackCommandExecution :
 object LeaveFeedbackTextExecution : WithPreExecuteLogic, TextExecution("Thank you for your feedback!", MAIN_MENU) {
     private const val MAX_FEEDBACK_LENGTH = 150;
 
-    override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
+    override suspend fun preExecuteCheck(env: MessageHandlerEnvironmentWrapper): PreExecuteResult {
         if (text.length >= MAX_FEEDBACK_LENGTH) {
             return PreExecuteResult.Error("Feedback must be shorter than $MAX_FEEDBACK_LENGTH symbols.")
         }
@@ -95,7 +95,7 @@ object FillNameTextExecution : WithPreExecuteLogic, TextExecution("Name is chang
         MongoDbConnector.setAccountInfoName(accountInfo.accountInfoId, text)
     }
 
-    override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
+    override suspend fun preExecuteCheck(env: MessageHandlerEnvironmentWrapper): PreExecuteResult {
         if (text.length > NAME_MAX_LENGTH) {
             return PreExecuteResult.Error("User name must be not be greater than $NAME_MAX_LENGTH")
         }
@@ -111,7 +111,7 @@ object FillSurnameNameTextExecution : WithPreExecuteLogic,
         MongoDbConnector.setAccountInfoSurname(accountInfo.accountInfoId, text)
     }
 
-    override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
+    override suspend fun preExecuteCheck(env: MessageHandlerEnvironmentWrapper): PreExecuteResult {
         if (text.length > SURNAME_MAX_LENGTH) {
             return PreExecuteResult.Error("User name must be not be greater than $SURNAME_MAX_LENGTH")
         }
@@ -126,7 +126,7 @@ object FillAboutTextExecution : WithPreExecuteLogic, TextExecution("About is cha
         MongoDbConnector.setAccountInfoAbout(accountInfo.accountInfoId, text)
     }
 
-    override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
+    override suspend fun preExecuteCheck(env: MessageHandlerEnvironmentWrapper): PreExecuteResult {
         if (text.length > ABOUT_MAX_LENGTH) {
             return PreExecuteResult.Error("About must be not be greater than $ABOUT_MAX_LENGTH.")
         }
@@ -136,7 +136,7 @@ object FillAboutTextExecution : WithPreExecuteLogic, TextExecution("About is cha
 
 object FindExecution : WithPreExecuteLogic,
     JustChangeStateCommandExecution(FIND, "Let's find some ride!", STARTED) {
-    override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
+    override suspend fun preExecuteCheck(env: MessageHandlerEnvironmentWrapper): PreExecuteResult {
         if (accountInfo.name == null || accountInfo.about == null) {
             return PreExecuteResult.Error(
                 "You must fill fields [name], [about] in order to start working with applications."
@@ -148,7 +148,7 @@ object FindExecution : WithPreExecuteLogic,
 
 object CreateExecution : WithPreExecuteLogic,
     JustChangeStateCommandExecution(CREATE, "Let's create new application.", CREATING_APPLICATION) {
-    override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
+    override suspend fun preExecuteCheck(env: MessageHandlerEnvironmentWrapper): PreExecuteResult {
         TODO("Not yet implemented")
     }
 }
@@ -162,7 +162,7 @@ class ApplicationMatchExecution(userCommand: UserCommand) : JustChangeStateComma
 object RatingMatchTextExecution : WithPreExecuteLogic, TextExecution("Your rate is accepted. Thank You!", STARTED) {
     private const val RATING_MAX_LENGTH = 150
 
-    override suspend fun preExecuteCheck(env: MessageHandlerEnvironment): PreExecuteResult {
+    override suspend fun preExecuteCheck(env: MessageHandlerEnvironmentWrapper): PreExecuteResult {
         if (text.length > RATING_MAX_LENGTH) {
             return PreExecuteResult.Error("Rating must be not be greater than $ABOUT_MAX_LENGTH.")
         }
@@ -174,7 +174,7 @@ object RatingMatchTextExecution : WithPreExecuteLogic, TextExecution("Your rate 
     }
 }
 object RefuseToRateExecution : WithOnExecuteLogic, StateChangeCommandExecution(REFUSE, "Okay, you get unreliable badge.", STARTED) {
-    override suspend fun doInnerInnerJob(env: MessageHandlerEnvironment) {
+    override suspend fun doInnerInnerJob(env: MessageHandlerEnvironmentWrapper) {
         TODO("Not yet implemented")
     }
 }

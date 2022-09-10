@@ -20,6 +20,7 @@ enum class UserState {
 
     ASKING_TO_RATE;
 
+    /** Covered in a list of lists for KeyboardCreator automatically finds needed text. */
     val allowedExecutions: List<Execution>
         get() = when (this) {
             NOT_STARTED -> listOf(StartExecution)

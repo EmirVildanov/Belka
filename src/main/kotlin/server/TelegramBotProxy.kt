@@ -4,6 +4,8 @@ import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.message
+import com.github.kotlintelegrambot.entities.ChatId
+import com.github.kotlintelegrambot.entities.ChatId.Companion
 import com.github.kotlintelegrambot.logging.LogLevel.Error
 import db.MongoDbConnector
 import kotlinx.coroutines.runBlocking
@@ -26,14 +28,15 @@ object TelegramBotProxy {
 
             dispatch {
                 message {
+                    val envWrapper = MessageHandlerEnvironmentWrapper(this)
                     if (message.photo != null) {
-                        UserInteractor.handlePhoto(this)
+                        UserInteractor.handlePhoto(envWrapper)
                     } else if (message.document != null) {
-                        UserInteractor.handleDocument(this)
+                        UserInteractor.handleDocument(envWrapper)
                     } else if (Utils.textIsCommand(message.text)) {
-                        UserInteractor.handleCommand(this)
+                        UserInteractor.handleCommand(envWrapper)
                     } else {
-                        UserInteractor.handleText(this)
+                        UserInteractor.handleText(envWrapper)
                     }
                 }
             }
@@ -44,7 +47,14 @@ object TelegramBotProxy {
         runBlocking {
             val accountsInfo = MongoDbConnector.getAllAccountInfo()
             accountsInfo.consumeEach {
-                println(it.age)
+                if (it.chatId != null) {
+                    val keyboard = KeyboardCreator.createKeyboard(it.state)
+                    telegramBot.sendMessage(
+                        chatId = ChatId.fromId(it.chatId),
+                        text = "Recovered after fall",
+                        replyMarkup = keyboard
+                    )
+                }
             }
         }
     }
