@@ -24,7 +24,8 @@ data class AccountInfo(
     @Contextual
     val statisticsId: UUID,
     val ratingIds: List<@Contextual UUID>,
-    val applicationIds: List<@Contextual UUID>,
+    val createdApplicationIds: List<@Contextual UUID>,
+    val acceptedApplicationIds: List<@Contextual UUID>,
     val credentials: String, // Needed for authorization beyond Telegram
     val state: UserState,
     val name: String?,
@@ -45,7 +46,8 @@ data class AccountInfo(
                 createdAt = TimeWorker.now(TimeWorker.ZONE_MOSCOW),
                 statisticsId = MongoDbConnector.addNewStatistics(accountId).statisticsId,
                 ratingIds = listOf(),
-                applicationIds = listOf(),
+                createdApplicationIds = listOf(),
+                acceptedApplicationIds = listOf(),
                 credentials = generateNewCredentials(),
                 state = NOT_STARTED,
                 name = null,

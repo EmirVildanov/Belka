@@ -15,6 +15,7 @@ import server.userInteractor.FillSurnameNameTextExecution.SURNAME_MAX_LENGTH
 import server.userInteractor.UserCommand.ABOUT
 import server.userInteractor.UserCommand.ACCOUNT
 import server.userInteractor.UserCommand.BACK
+import server.userInteractor.UserCommand.CHOOSE_FROM
 import server.userInteractor.UserCommand.CREATE
 import server.userInteractor.UserCommand.FIND
 import server.userInteractor.UserCommand.LEAVE_FEEDBACK
@@ -25,6 +26,7 @@ import server.userInteractor.UserCommand.START
 import server.userInteractor.UserCommand.SURNAME
 import server.userInteractor.UserState.ASKING_TO_RATE
 import server.userInteractor.UserState.CREATING_APPLICATION
+import server.userInteractor.UserState.CREATING_FROM_POINT
 import server.userInteractor.UserState.FILLING_ABOUT
 import server.userInteractor.UserState.FILLING_ACCOUNT_INFO
 import server.userInteractor.UserState.FILLING_NAME
@@ -149,9 +151,13 @@ object FindExecution : WithPreExecuteLogic,
 object CreateExecution : WithPreExecuteLogic,
     JustChangeStateCommandExecution(CREATE, "Let's create new application.", CREATING_APPLICATION) {
     override suspend fun preExecuteCheck(env: MessageHandlerEnvironmentWrapper): PreExecuteResult {
-        TODO("Not yet implemented")
+        if (accountInfo.createdApplicationIds.size < 3) {
+            return PreExecuteResult.Ok
+        }
+        return PreExecuteResult.Error("Number of created applications exceed 3.")
     }
 }
+
 
 class ApplicationMatchExecution(userCommand: UserCommand) : JustChangeStateCommandExecution(
     userCommand,
@@ -173,7 +179,9 @@ object RatingMatchTextExecution : WithPreExecuteLogic, TextExecution("Your rate 
         TODO("Not yet implemented")
     }
 }
-object RefuseToRateExecution : WithOnExecuteLogic, StateChangeCommandExecution(REFUSE, "Okay, you get unreliable badge.", STARTED) {
+
+object RefuseToRateExecution : WithOnExecuteLogic,
+    StateChangeCommandExecution(REFUSE, "Okay, you get unreliable badge.", STARTED) {
     override suspend fun doInnerInnerJob(env: MessageHandlerEnvironmentWrapper) {
         TODO("Not yet implemented")
     }

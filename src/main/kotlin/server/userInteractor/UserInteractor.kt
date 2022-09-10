@@ -36,7 +36,7 @@ object UserInteractor {
         command: UserCommand
     ): ExecutionSearchResult {
         val searchResult =
-            currentState.allowedExecutions.filterIsInstance<ICommandExecution>().find { it.command == command }
+            currentState.allowedExecutions.flatten().filterIsInstance<ICommandExecution>().find { it.command == command }
         searchResult?.let { return Ok(it as Execution) } ?: return NotFound
     }
 
@@ -45,7 +45,7 @@ object UserInteractor {
      */
     private fun getTextExecution(currentState: UserState): ExecutionSearchResult {
         val allowedExecutions =
-            currentState.allowedExecutions.filterIsInstance<TextExecution>()
+            currentState.allowedExecutions.flatten().filterIsInstance<TextExecution>()
         if (allowedExecutions.isEmpty()) {
             return NotFound
         }

@@ -5,7 +5,6 @@ import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.message
 import com.github.kotlintelegrambot.entities.ChatId
-import com.github.kotlintelegrambot.entities.ChatId.Companion
 import com.github.kotlintelegrambot.logging.LogLevel.Error
 import db.MongoDbConnector
 import kotlinx.coroutines.runBlocking
@@ -43,7 +42,7 @@ object TelegramBotProxy {
         }
     }
 
-    fun sendRecoverMessage() {
+    fun recover() {
         runBlocking {
             val accountsInfo = MongoDbConnector.getAllAccountInfo()
             accountsInfo.consumeEach {

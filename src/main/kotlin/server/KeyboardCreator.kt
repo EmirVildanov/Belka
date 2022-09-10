@@ -1,6 +1,8 @@
 package server
 
 import com.github.kotlintelegrambot.entities.KeyboardReplyMarkup
+import server.userInteractor.Execution
+import server.userInteractor.Execution.ICommandExecution
 import server.userInteractor.UserCommand
 import server.userInteractor.UserCommand.ABOUT
 import server.userInteractor.UserCommand.ACCOUNT
@@ -30,14 +32,8 @@ object KeyboardCreator {
     }
 
     private fun createListKeyboard(state: UserState): List<List<UserCommand>> {
-        return when (state) {
-            MAIN_MENU -> listOf(listOf(ACCOUNT, HELP), listOf(FIND))
-            FILLING_ACCOUNT_INFO -> listOf(listOf(NAME, SURNAME, ABOUT), listOf(BACK))
-            FILLING_NAME -> listOf(listOf(BACK))
-            FILLING_SURNAME -> listOf(listOf(BACK))
-            FILLING_ABOUT -> listOf(listOf(BACK))
-            STARTED -> listOf(listOf(BACK))
-            else -> listOf()
+        return state.allowedExecutions.map { executionsList ->
+            executionsList.filterIsInstance<ICommandExecution>().map { it.command }
         }
     }
 

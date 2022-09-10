@@ -66,7 +66,7 @@ sealed class Execution {
         private suspend fun changeState(env: MessageHandlerEnvironmentWrapper, toState: UserState) {
             assert(this::accountInfo.isInitialized) { "obtainAccountInfo must be called before changing state." }
             MongoDbConnector.setAccountInfoState(accountInfo.accountInfoId, toState)
-            val result = env.sendMessage(
+            env.sendMessage(
                 toState,
                 keyboardCommentText
             )

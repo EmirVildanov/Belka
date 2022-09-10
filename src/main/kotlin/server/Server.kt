@@ -4,7 +4,6 @@ import db.MongoDbConnector
 import db.RedisConnector
 import server.rides.RideInfoFetcher
 import server.userInteractor.UserInteractor
-import status.check.ServerStatusChecker
 import utils.CustomLogger
 import kotlin.system.exitProcess
 
@@ -12,7 +11,7 @@ object Server {
     fun start() {
         try {
             init()
-            TelegramBotProxy.sendRecoverMessage()
+            TelegramBotProxy.recover()
             TelegramBotProxy.startPolling()
         } catch (e: IllegalArgumentException) {
             CustomLogger.logExceptionMessage("Probably couldn't open properties file", e)
